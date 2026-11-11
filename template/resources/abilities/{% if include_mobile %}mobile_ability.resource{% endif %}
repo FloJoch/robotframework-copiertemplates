@@ -1,0 +1,11 @@
+*** Settings ***
+Documentation       Ability "operate apps": imports the AppiumLibrary and provides server and app.
+...                 No keywords - they live in interactions/. Example: the Android settings.
+Resource            ${EXECDIR}/resources/main.resource
+Library             AppiumLibrary    timeout=${TIMEOUT}
+
+
+*** Variables ***
+${APPIUM_SERVER_URL}        http://127.0.0.1:4723
+${ANDROID_APP_PACKAGE}      com.android.settings
+${ANDROID_APP_ACTIVITY}     .Settings

@@ -1,0 +1,19 @@
+*** Settings ***
+Documentation       Business actions in the settings app - these keywords are used in tests.
+Resource            ${EXECDIR}/resources/interactions/mobile_interactions.resource
+
+
+*** Keywords ***
+Start Settings App
+    [Documentation]    Starts the settings app.
+    Launch App
+
+Open Setting
+    [Documentation]    Opens an entry of the settings, e.g. "Display" or "Battery".
+    [Arguments]    ${entry}
+    ${selector}    Build Mobile Selector    ${ANDROID_SETTINGS_ENTRY}    ${entry}
+    Tap On    ${selector}
+
+Stop App
+    [Documentation]    Closes the app.
+    Close Apps

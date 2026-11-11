@@ -1,0 +1,3 @@
+# Binärdateien nie umschreiben (Zeilenenden würden PDFs zerstören)
+*.pdf binary
+*.png binary

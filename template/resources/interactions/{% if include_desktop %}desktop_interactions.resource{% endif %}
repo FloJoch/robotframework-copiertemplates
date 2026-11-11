@@ -1,0 +1,36 @@
+*** Settings ***
+Documentation       Technical helper keywords for desktop programs. Only here are keywords of PlatynUI used.
+Resource            ${EXECDIR}/resources/abilities/desktop_ability.resource
+Variables           ${EXECDIR}/resources/pages/calculator_page.py
+Keyword Tags        interaction
+
+
+*** Keywords ***
+Launch Program
+    [Documentation]    Starts the program.
+    Start Process    ${DESKTOP_PROGRAM}
+
+Wait For Window
+    [Documentation]    Waits until the window is visible.
+    [Arguments]    ${window}
+    Ensure Exists    ${window}    timeout=${TIMEOUT}
+
+Focus Element
+    [Documentation]    Clicks an element so that its window receives the keyboard input.
+    [Arguments]    ${element}
+    Mouse Click    ${element}
+
+Type Into Window
+    [Documentation]    Types keys into the window, e.g. "12+30=".
+    [Arguments]    ${window}    ${keys}
+    Type Keys    ${window}    ${keys}
+
+Read Element Name
+    [Documentation]    Reads the label of an element and returns it.
+    [Arguments]    ${element}
+    ${text}    Get Property Value    ${element}    Name
+    RETURN    ${text}
+
+Close Program
+    [Documentation]    Ends the program.
+    Run Process    taskkill    /IM    ${DESKTOP_PROCESS_NAME}

@@ -1,0 +1,11 @@
+*** Settings ***
+Documentation       Generic checks in apps - these keywords are used in tests.
+Resource            ${EXECDIR}/resources/interactions/mobile_interactions.resource
+
+
+*** Keywords ***
+Screen Should Show Text
+    [Documentation]    Checks that a text is visible on the screen.
+    [Arguments]    ${text}
+    ${selector}    Build Mobile Selector    ${ANDROID_SETTINGS_TEXT}    ${text}
+    Wait For Visible Element    ${selector}

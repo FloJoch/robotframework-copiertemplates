@@ -1,0 +1,24 @@
+# Python and uv
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Results of test runs
+results/
+output.xml
+log.html
+report.html
+xunit.xml
+playwright-log.txt
+browser/
+
+# Tools
+.robotcode_cache/
+.uv-cache/
+node_modules/
+
+# Secrets: private CryptoLibrary key and local environment files
+data/keys/private_key*
+.env
+.env.*

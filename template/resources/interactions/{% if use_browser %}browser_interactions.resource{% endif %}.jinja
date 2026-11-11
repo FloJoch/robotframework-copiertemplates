@@ -1,0 +1,77 @@
+*** Settings ***
+Documentation       Technical helper keywords for the browser. Only here are keywords of the Browser Library used.
+...                 Tests do not use them directly, but through tasks and assertions.
+Resource            ${EXECDIR}/resources/abilities/browser_ability.resource
+Resource            ${EXECDIR}/resources/pages/login_page.resource
+Resource            ${EXECDIR}/resources/pages/main_page.resource
+Resource            ${EXECDIR}/resources/pages/cart_page.resource
+Resource            ${EXECDIR}/resources/pages/settings_page.resource
+Keyword Tags        interaction
+
+
+*** Keywords ***
+Launch Browser
+    [Documentation]    Starts the browser with the configured size and speed.
+    ...    Always without a window in the CI pipeline.
+    IF    ${CI}
+        New Browser    {{ '${BROWSER}' if include_web and web_library == 'browser' else 'chromium' }}    headless=True
+    ELSE
+        New Browser    {{ '${BROWSER}' if include_web and web_library == 'browser' else 'chromium' }}    headless=${HEADLESS}    slowMo=${BROWSER_SPEED}
+    END
+    New Context    viewport={'width': ${SCREEN_WIDTH}, 'height': ${SCREEN_HEIGHT} }
+    New Page
+
+Close All Web Browsers
+    [Documentation]    Closes all browser windows.
+    Close Browser    ALL
+
+Go To Address
+    [Documentation]    Opens the address in the browser.
+    [Arguments]    ${address}
+    Go To    ${address}
+
+Build Selector
+    [Documentation]    Puts values into a selector with placeholders, e.g. {product}.
+    [Arguments]    ${template}    &{values}
+    ${selector}    Format String    ${template}    &{values}
+    RETURN    ${selector}
+
+Fill Field
+    [Documentation]    Writes text into an input field.
+    [Arguments]    ${selector}    ${text}
+    Fill Text    ${selector}    ${text}
+
+Fill Secret Field
+    [Documentation]    Writes a secret value (e.g. a password) into a field without writing it to the log.
+    [Arguments]    ${selector}    ${secret}
+    Fill Secret    ${selector}    $secret
+
+Click On
+    [Documentation]    Clicks an element.
+    [Arguments]    ${selector}
+    Click    ${selector}
+
+Wait For Text
+    [Documentation]    Waits until the element shows exactly this text (at most ${TIMEOUT}).
+    [Arguments]    ${selector}    ${text}
+    Get Text    ${selector}    ==    ${text}
+
+Wait For Text Part
+    [Documentation]    Waits until the text of the element contains the part (at most ${TIMEOUT}).
+    [Arguments]    ${selector}    ${part}
+    Get Text    ${selector}    *=    ${part}
+
+Wait For Element Count
+    [Documentation]    Waits until exactly this many elements match the selector (at most ${TIMEOUT}).
+    [Arguments]    ${selector}    ${count}
+    Get Element Count    ${selector}    ==    ${count}
+
+Wait For Visible Element
+    [Documentation]    Waits until the element is visible.
+    [Arguments]    ${selector}
+    Wait For Elements State    ${selector}    visible
+
+Wait For Address Part
+    [Documentation]    Waits until the address in the browser contains the part.
+    [Arguments]    ${part}
+    Get Url    *=    ${part}

@@ -1,0 +1,81 @@
+*** Settings ***
+Documentation       Technical helper keywords for the browser. Only here are keywords of the SeleniumLibrary used.
+...                 Same names as with the Browser Library - tasks and assertions stay identical.
+Resource            ${EXECDIR}/resources/abilities/selenium_ability.resource
+Resource            ${EXECDIR}/resources/pages/login_page.resource
+Resource            ${EXECDIR}/resources/pages/main_page.resource
+Resource            ${EXECDIR}/resources/pages/cart_page.resource
+Resource            ${EXECDIR}/resources/pages/settings_page.resource
+Keyword Tags        interaction
+
+
+*** Keywords ***
+Launch Browser
+    [Documentation]    Starts the browser with the configured size and speed.
+    ...    Always without a window in the CI pipeline.
+    IF    ${CI} or ${HEADLESS}
+        Open Browser    about:blank    headless${BROWSER}
+    ELSE
+        Open Browser    about:blank    ${BROWSER}
+    END
+    Set Window Size    ${SCREEN_WIDTH}    ${SCREEN_HEIGHT}
+    Set Selenium Speed    ${BROWSER_SPEED}
+
+Close All Web Browsers
+    [Documentation]    Closes all browser windows.
+    Close All Browsers
+
+Go To Address
+    [Documentation]    Opens the address in the browser.
+    [Arguments]    ${address}
+    Go To    ${address}
+
+Build Selector
+    [Documentation]    Puts values into a selector with placeholders, e.g. {product}.
+    [Arguments]    ${template}    &{values}
+    ${selector}    Format String    ${template}    &{values}
+    RETURN    ${selector}
+
+Fill Field
+    [Documentation]    Writes text into an input field.
+    [Arguments]    ${selector}    ${text}
+    Wait Until Element Is Visible    ${selector}
+    Input Text    ${selector}    ${text}
+
+Fill Secret Field
+    [Documentation]    Writes a secret value (e.g. a password) into a field without writing it to the log.
+    [Arguments]    ${selector}    ${secret}
+    Wait Until Element Is Visible    ${selector}
+    Input Password    ${selector}    ${secret}
+
+Click On
+    [Documentation]    Clicks an element as soon as it is clickable.
+    [Arguments]    ${selector}
+    Wait Until Element Is Visible    ${selector}
+    Wait Until Keyword Succeeds    ${TIMEOUT}    200ms    Click Element    ${selector}
+
+Wait For Text
+    [Documentation]    Waits until the element shows exactly this text (at most ${TIMEOUT}).
+    [Arguments]    ${selector}    ${text}
+    Wait Until Element Is Visible    ${selector}
+    Wait Until Keyword Succeeds    ${TIMEOUT}    200ms    Element Text Should Be    ${selector}    ${text}
+
+Wait For Text Part
+    [Documentation]    Waits until the text of the element contains the part (at most ${TIMEOUT}).
+    [Arguments]    ${selector}    ${part}
+    Wait Until Element Contains    ${selector}    ${part}
+
+Wait For Element Count
+    [Documentation]    Waits until exactly this many elements match the selector (at most ${TIMEOUT}).
+    [Arguments]    ${selector}    ${count}
+    Wait Until Keyword Succeeds    ${TIMEOUT}    200ms    Page Should Contain Element    ${selector}    limit=${count}
+
+Wait For Visible Element
+    [Documentation]    Waits until the element is visible.
+    [Arguments]    ${selector}
+    Wait Until Element Is Visible    ${selector}
+
+Wait For Address Part
+    [Documentation]    Waits until the address in the browser contains the part.
+    [Arguments]    ${part}
+    Wait Until Location Contains    ${part}

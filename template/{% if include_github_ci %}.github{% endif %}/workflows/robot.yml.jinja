@@ -1,0 +1,82 @@
+# GitHub Actions - uses only the profiles from robot.toml (see README, section "GitHub Actions").
+# The project uses its own environment from uv.lock (Robot Framework {{ rf_version }}), so that the same versions
+# run locally and in the pipeline.
+name: Robot Framework
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment (dev, test or prod)"
+        default: dev
+        type: choice
+        options: [dev, test, prod]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --locked
+      - run: uv run robocop check
+      - run: uv run robotcode -p ci -p check robot
+
+  test:
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --locked
+{%- if (include_web and web_library == 'browser') or include_accessibility %}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - run: uv run rfbrowser init chromium
+{%- endif %}
+{%- if include_accessibility %}
+      - run: npm ci
+{%- endif %}
+{%- raw %}
+      # Started by hand (Actions > Robot Framework > Run workflow) against the chosen environment, otherwise dev
+      - run: uv run robotcode -p ci -p ${{ inputs.environment || 'dev' }} robot
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: results
+          path: results/
+{%- endraw %}
+
+  # Reports (as a warning, without stopping the run) when the template for Robot Framework {{ rf_version }} is newer
+  # than this project, and shows which Robot Framework versions the template offers.
+  template-check:
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check template
+        run: |
+          SRC=$(sed -n 's/^_src_path: *//p' .copier-answers.yml)
+          STATE=$(sed -n 's/^_commit: *//p' .copier-answers.yml)
+          BRANCH="rf-{{ rf_version }}"
+          LATEST=$(git ls-remote "$SRC" "refs/heads/$BRANCH" | cut -c1-40)
+          if [ -z "$LATEST" ]; then echo "::warning::Template or branch $BRANCH not reachable: $SRC"; exit 1; fi
+          case "$STATE" in
+            *-g*) CURRENT="${STATE##*-g}" ;;
+            *)
+              TAG=$(git ls-remote "$SRC" "refs/tags/$STATE" "refs/tags/$STATE^{}")
+              CURRENT=$(echo "$TAG" | grep '\^{}' | cut -c1-40)
+              [ -n "$CURRENT" ] || CURRENT=$(echo "$TAG" | head -n 1 | cut -c1-40)
+              ;;
+          esac
+          [ -n "$CURRENT" ] || CURRENT="$STATE"
+          echo "Robot Framework versions of the template:"
+          git ls-remote --heads "$SRC" "rf-*" | sed 's#.*refs/heads/rf-#  #'
+          case "$LATEST" in
+            "$CURRENT"*) echo "Project is up to date with $BRANCH." ;;
+            *) echo "::warning::Template update available: uvx copier update --trust --vcs-ref $BRANCH"; exit 1 ;;
+          esac

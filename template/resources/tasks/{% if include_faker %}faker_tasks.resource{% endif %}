@@ -1,0 +1,35 @@
+*** Settings ***
+Documentation       Business actions: generate test data for customers - these keywords are used in tests.
+Resource            ${EXECDIR}/resources/interactions/faker_interactions.resource
+
+
+*** Keywords ***
+Generate Random Customer
+    [Documentation]    Generates a fake customer with name, e-mail, street, city and date of birth.
+    ${name}    Generate Full Name
+    ${email}    Generate Email Address
+    ${street}    Generate Street
+    ${city}    Generate City
+    ${birth_date}    Generate Birth Date
+    VAR    &{customer}    name=${name}    email=${email}    street=${street}    city=${city}
+    ...    birth_date=${birth_date}
+    RETURN    ${customer}
+
+Generate Random Customers
+    [Documentation]    Generates several fake customers and returns them as a list.
+    [Arguments]    ${count}
+    VAR    @{customers}    @{EMPTY}
+    FOR    ${_}    IN RANGE    ${count}
+        ${customer}    Generate Random Customer
+        VAR    @{customers}    @{customers}    ${customer}
+    END
+    RETURN    ${customers}
+
+Collect Email Addresses
+    [Documentation]    Returns the e-mail addresses of a list of customers as a list.
+    [Arguments]    ${customers}
+    VAR    @{addresses}    @{EMPTY}
+    FOR    ${customer}    IN    @{customers}
+        VAR    @{addresses}    @{addresses}    ${customer}[email]
+    END
+    RETURN    ${addresses}

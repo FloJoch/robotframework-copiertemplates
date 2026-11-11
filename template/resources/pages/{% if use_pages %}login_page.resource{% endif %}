@@ -1,0 +1,10 @@
+*** Settings ***
+Documentation       Page object "login page": selectors of the elements. One file per page, names PAGE_ELEMENT.
+...                 Example: demo shop saucedemo.com. Selectors via id or data-test - stable and unique.
+
+
+*** Variables ***
+${LOGIN_USERNAME_FIELD}     id=user-name
+${LOGIN_PASSWORD_FIELD}     id=password
+${LOGIN_BUTTON}             id=login-button
+${LOGIN_ERROR_MESSAGE}      css=[data-test="error"]

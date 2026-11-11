@@ -1,0 +1,11 @@
+version: 2
+updates:
+  # Development dependencies of the template repository (copier, pytest, ...)
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

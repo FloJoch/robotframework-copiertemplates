@@ -1,0 +1,8 @@
+*** Settings ***
+Documentation       Page object "cart".
+
+
+*** Variables ***
+${CART_TITLE}               css=[data-test="title"]
+${CART_ITEMS}               css=[data-test="inventory-item"]
+${CART_ITEM_NAMES}          css=[data-test="inventory-item-name"]

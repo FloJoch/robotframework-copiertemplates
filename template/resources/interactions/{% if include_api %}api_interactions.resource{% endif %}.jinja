@@ -1,0 +1,31 @@
+*** Settings ***
+Documentation       Technical helper keywords for the interface. Only here are keywords {{ 'of the RequestsLibrary' if api_library == 'requests' else 'of RESTinstance' }} used.
+...                 Every request returns a dictionary with "status" (status code) and "body" (content).
+Resource            ${EXECDIR}/resources/abilities/api_ability.resource
+Keyword Tags        interaction
+
+
+*** Keywords ***
+Send Get Request
+    [Documentation]    Queries an endpoint. Further arguments are added as query parameters.
+    [Arguments]    ${path}    &{parameters}
+{%- if api_library == 'requests' %}
+    ${response}    GET    ${API_BASE_URL}${path}    params=${parameters}    expected_status=anything
+    VAR    &{result}    status=${response.status_code}    body=${response.json()}
+{%- else %}
+    ${response}    GET    ${API_BASE_URL}${path}    query=${parameters}
+    VAR    &{result}    status=${response}[status]    body=${response}[body]
+{%- endif %}
+    RETURN    ${result}
+
+Send Post Request
+    [Documentation]    Sends data as JSON to an endpoint.
+    [Arguments]    ${path}    &{data}
+{%- if api_library == 'requests' %}
+    ${response}    POST    ${API_BASE_URL}${path}    json=${data}    expected_status=anything
+    VAR    &{result}    status=${response.status_code}    body=${response.json()}
+{%- else %}
+    ${response}    POST    ${API_BASE_URL}${path}    body=${data}
+    VAR    &{result}    status=${response}[status]    body=${response}[body]
+{%- endif %}
+    RETURN    ${result}

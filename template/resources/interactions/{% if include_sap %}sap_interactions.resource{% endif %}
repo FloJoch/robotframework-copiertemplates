@@ -1,0 +1,24 @@
+*** Settings ***
+Documentation       Technical helper keywords for SAP. Only here are keywords of RoboSAPiens used.
+Resource            ${EXECDIR}/resources/abilities/sap_ability.resource
+Keyword Tags        interaction
+
+
+*** Keywords ***
+Connect To Sap Client
+    [Documentation]    Connects to an SAP GUI that is already open and logged in.
+    Connect To Running SAP
+
+Run Transaction Code
+    [Documentation]    Starts a transaction by its code, e.g. "SU3".
+    [Arguments]    ${code}
+    Execute Transaction    ${code}
+
+Read Sap Window Title
+    [Documentation]    Reads the title of the active SAP window and returns it.
+    ${title}    Get Window Title
+    RETURN    ${title}
+
+Close Sap Client
+    [Documentation]    Closes SAP.
+    Close SAP

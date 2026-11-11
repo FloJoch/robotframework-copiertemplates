@@ -1,0 +1,19 @@
+*** Settings ***
+Documentation       Business actions with e-mails - these keywords are used in tests.
+Resource            ${EXECDIR}/resources/interactions/email_interactions.resource
+
+
+*** Keywords ***
+Connect To Mailbox
+    [Documentation]    Logs in to the mailbox. Belongs in the test setup.
+    Open Mailbox Connection
+
+Disconnect From Mailbox
+    [Documentation]    Logs out of the mailbox. Belongs in the test teardown.
+    Close Mailbox Connection
+
+Wait For Email From
+    [Documentation]    Waits for an e-mail from the sender with the subject and returns it.
+    [Arguments]    ${sender}    ${subject}
+    ${email_id}    Wait For New Email    ${sender}    ${subject}
+    RETURN    ${email_id}

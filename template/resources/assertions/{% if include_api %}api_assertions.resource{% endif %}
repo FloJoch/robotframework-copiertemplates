@@ -1,0 +1,21 @@
+*** Settings ***
+Documentation       Generic checks of interface responses - these keywords are used in tests.
+Resource            ${EXECDIR}/resources/interactions/api_interactions.resource
+
+
+*** Keywords ***
+Status Code Should Be
+    [Documentation]    Checks the status code of the response (e.g. 200 = OK, 201 = created, 404 = not found).
+    [Arguments]    ${response}    ${expected}
+    Should Be Equal As Integers    ${response}[status]    ${expected}
+
+Response Field Should Be
+    [Documentation]    Checks the value of a field in the response content.
+    [Arguments]    ${response}    ${field}    ${expected}
+    Should Be Equal As Strings    ${response}[body][${field}]    ${expected}
+
+Response Should Have At Least Entries
+    [Documentation]    Checks that the response is a list with at least this many entries.
+    [Arguments]    ${response}    ${minimum}
+    ${count}    Get Length    ${response}[body]
+    Should Be True    ${count} >= ${minimum}    Only ${count} entries, expected at least ${minimum}

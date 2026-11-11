@@ -1,0 +1,95 @@
+# GitLab CI - uses only the profiles from robot.toml (see README, section "GitLab CI").
+#
+# Image: ppodgorsek/robot-framework ships browsers (Chromium, Firefox), drivers and Node.js.
+# The project still uses its own environment from uv.lock (Robot Framework {{ rf_version }}), so that the same
+# versions run locally and in CI. uv is installed for that.
+#
+# Other images (then adapt the before_script lines):
+#   ghcr.io/astral-sh/uv:python{{ python_version }}-bookworm          - slim, no browser; for API/database/test data
+#   mcr.microsoft.com/playwright/python:v1.49.0-noble - Playwright browsers and system packages preinstalled
+stages: [check, test]
+
+default:
+  image:
+    name: ppodgorsek/robot-framework:latest
+    entrypoint: [""]
+  variables:
+    UV_CACHE_DIR: "$CI_PROJECT_DIR/.uv-cache"
+  cache:
+    key: uv
+    paths: [.uv-cache/]
+  before_script:
+    - python3 -m pip install --user --quiet uv
+    - export PATH="$HOME/.local/bin:$PATH"
+    - uv sync --locked
+{%- if (include_web and web_library == 'browser') or include_accessibility %}
+    - uv run rfbrowser init chromium
+{%- endif %}
+{%- if include_accessibility %}
+    - npm ci
+{%- endif %}
+
+check:
+  stage: check
+  script:
+    - uv run robocop check
+    - uv run robotcode -p ci -p check robot
+
+test:
+  stage: test
+  script:
+    - uv run robotcode -p ci robot
+  artifacts:
+    when: always
+    paths: [results/]
+    reports:
+      junit: results/xunit.xml
+
+# Reports (yellow, without stopping the pipeline) when the template for Robot Framework {{ rf_version }} is newer than
+# this project, and shows which Robot Framework versions the template offers.
+# Runs on the default branch. The template must be readable for the pipeline (public or with access).
+template-check:
+  stage: check
+  image:
+    name: alpine/git:latest
+    entrypoint: [""]
+  cache: []
+  before_script: []
+  allow_failure: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - |
+      SRC=$(sed -n 's/^_src_path: *//p' .copier-answers.yml)
+      STATE=$(sed -n 's/^_commit: *//p' .copier-answers.yml)
+      BRANCH="rf-{{ rf_version }}"
+      LATEST=$(git ls-remote "$SRC" "refs/heads/$BRANCH" | cut -c1-40)
+      if [ -z "$LATEST" ]; then echo "Template or branch $BRANCH not reachable: $SRC"; exit 1; fi
+      case "$STATE" in
+        *-g*) CURRENT="${STATE##*-g}" ;;
+        *)
+          TAG=$(git ls-remote "$SRC" "refs/tags/$STATE" "refs/tags/$STATE^{}")
+          CURRENT=$(echo "$TAG" | grep '\^{}' | cut -c1-40)
+          [ -n "$CURRENT" ] || CURRENT=$(echo "$TAG" | head -n 1 | cut -c1-40)
+          ;;
+      esac
+      [ -n "$CURRENT" ] || CURRENT="$STATE"
+      echo "Robot Framework versions of the template:"
+      git ls-remote --heads "$SRC" "rf-*" | sed 's#.*refs/heads/rf-#  #'
+      case "$LATEST" in
+        "$CURRENT"*) echo "Project is up to date with $BRANCH." ;;
+        *) echo "Template update available: uvx copier update --trust --vcs-ref $BRANCH"; exit 1 ;;
+      esac
+
+# Against a specific environment: set the variable RF_ENV (test/prod) under Build > Pipeline schedules.
+test-environment:
+  stage: test
+  rules:
+    - if: $RF_ENV
+  script:
+    - uv run robotcode -p ci -p $RF_ENV -p smoke robot
+  artifacts:
+    when: always
+    paths: [results/]
+    reports:
+      junit: results/xunit.xml

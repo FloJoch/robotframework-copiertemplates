@@ -1,0 +1,10 @@
+*** Settings ***
+Documentation       Ability "operate desktop programs": imports PlatynUI and names the program.
+...                 No keywords - they live in interactions/. Example: the Windows calculator.
+Resource            ${EXECDIR}/resources/main.resource
+Library             PlatynUI
+
+
+*** Variables ***
+${DESKTOP_PROGRAM}          calc.exe
+${DESKTOP_PROCESS_NAME}     CalculatorApp.exe

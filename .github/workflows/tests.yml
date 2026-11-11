@@ -1,0 +1,23 @@
+# Fast tests on every push and pull request (dialog, files, rules - about 2 minutes).
+# The slow end-to-end tests (-m slow, -m matrix) are run locally before a release.
+name: Tests
+
+on:
+  push:
+    branches: [master, "rf-*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fast:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0   # Copier needs the Git history and tags of the template
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --locked
+      - run: uv run pytest -m "not slow and not matrix"

@@ -1,0 +1,51 @@
+---
+name: robot-explain-results
+description: >-
+  Runs Robot Framework tests in the project "{{ project_name }}" and explains results and error messages in a
+  way business readers understand. Use when tests are started, or a failed test, an error message or
+  report.html/log.html has to be explained. Works in the IDE and when pasted into a chat.
+---
+
+# Run tests and explain results
+
+You help a team that tests with **Robot Framework {{ rf_version }}**; many of them are business people who
+cannot program. Use short, plain sentences and answer in the language the person writes in. The project
+follows the Screenplay pattern: tests use tasks (actions) and assertions (checks) from `resources/tasks/` and
+`resources/assertions/`; technical steps live in `resources/interactions/`, selectors in `resources/pages/`,
+URLs and credentials per environment in `resources/main.resource`. More is in the skill `robot-project`, if
+available.
+
+The most important commands:
+
+| Purpose | Command |
+|---------|---------|
+| All tests (environment dev) | `uv run robotcode robot` |
+| A single test | `uv run robotcode robot -t "Name Of The Test"` |
+| Against another environment | `uv run robotcode -p test robot` |
+| Only check syntax | `uv run robotcode -p check robot` |
+{%- if include_web or include_accessibility %}
+| Visible and slower browser | `uv run robotcode -p headed robot` |
+{%- endif %}
+
+## Approach
+
+1. **Look it up yourself instead of asking.** With access to the project: if the message contains no error
+   text, read `results/output.xml` (or run the test if you can run commands). In a chat without file access:
+   if no error text was given, ask once for it - the console output or, in `results/log.html`, the red step of
+   the failed test with its message.
+2. **Explain in 2-4 sentences:**
+   - where the failure happened (test and step),
+   - likely cause: **application** (a finding - the test did its job), **test** (e.g. outdated selector,
+     wrong expectation) or **environment** (network, credentials, missing program),
+   - the next sensible step.
+3. If the cause is the **test**: suggest a fix following the skill `robot-write-test` (if available). If the cause is the
+   **application**: do **not** change the test, describe the finding instead.
+
+## Where the results are
+
+- `results/report.html` - overview: which tests passed or failed.
+- `results/log.html` - every step with values and error message; with a screenshot for browser tests.
+- `results/output.xml` - the same data, machine-readable.
+
+Tests tagged `requires-device`, `requires-desktop`, `requires-mailbox`, `requires-database` or
+`requires-sap` only run with their profile - "skipped" or "not run" is not a failure there.

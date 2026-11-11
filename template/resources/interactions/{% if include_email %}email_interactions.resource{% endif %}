@@ -1,0 +1,32 @@
+*** Settings ***
+Documentation       Technical helper keywords for e-mails. Only here are keywords of the ImapLibrary2 used.
+Resource            ${EXECDIR}/resources/abilities/email_ability.resource
+Keyword Tags        interaction
+
+
+*** Keywords ***
+Open Mailbox Connection
+    [Documentation]    Logs in to the mailbox.
+    Open Mailbox    host=${EMAIL_HOST}    user=${EMAIL_USER}    password=${EMAIL_PASSWORD}    port=${EMAIL_PORT}
+
+Close Mailbox Connection
+    [Documentation]    Logs out of the mailbox.
+    Close Mailbox
+
+Wait For New Email
+    [Documentation]    Waits for an e-mail with sender and subject and returns its identifier.
+    [Arguments]    ${sender}    ${subject}
+    ${email_id}    Wait For Email    sender=${sender}    subject=${subject}    timeout=${EMAIL_WAIT_SECONDS}
+    RETURN    ${email_id}
+
+Read Email Text
+    [Documentation]    Returns the text of an e-mail.
+    [Arguments]    ${email_id}
+    ${text}    Get Email Body    ${email_id}
+    RETURN    ${text}
+
+Read Links In Email
+    [Documentation]    Returns all links of an e-mail as a list.
+    [Arguments]    ${email_id}
+    ${links}    Get Links From Email    ${email_id}
+    RETURN    ${links}

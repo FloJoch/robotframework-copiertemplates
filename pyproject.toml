@@ -1,0 +1,20 @@
+[project]
+name = "robotframework-copiertemplates"
+version = "1.0.0"
+description = "Copier template for Robot Framework projects."
+requires-python = ">=3.13"
+dependencies = [
+    "copier>=9.4",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+]
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: erzeugt ein Projekt und führt es wirklich aus (Netzwerk/Installation nötig)",
+    "links: prüft Links in den README-Vorlagen",
+    "matrix: prüft viele Antwort-Kombinationen mit echten Läufen (rund 20 Minuten)",
+]

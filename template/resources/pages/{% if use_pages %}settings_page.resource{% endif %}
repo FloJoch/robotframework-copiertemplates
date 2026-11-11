@@ -1,0 +1,8 @@
+*** Settings ***
+Documentation       Page object "settings" (side menu with logout and reset).
+
+
+*** Variables ***
+${SETTINGS_MENU_BUTTON}     id=react-burger-menu-btn
+${SETTINGS_LOGOUT_LINK}     id=logout_sidebar_link
+${SETTINGS_RESET_LINK}      id=reset_sidebar_link

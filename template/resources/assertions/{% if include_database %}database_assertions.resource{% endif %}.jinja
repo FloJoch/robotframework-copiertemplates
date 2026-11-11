@@ -1,0 +1,25 @@
+*** Settings ***
+Documentation       Generic checks of data in the database - these keywords are used in tests.
+Resource            ${EXECDIR}/resources/interactions/database_interactions.resource
+
+
+*** Keywords ***
+Query Should Return
+    [Documentation]    Runs an SQL query and checks the first value of the first row.
+    [Arguments]    ${sql}    ${expected}
+    ${rows}    Read Rows    ${sql}
+    Should Not Be Empty    ${rows}    The query returns no row
+    Should Be Equal As Strings    ${rows}[0][0]    ${expected}
+
+Table Should Have Rows
+    [Documentation]    Checks how many rows a table has.
+    [Arguments]    ${table}    ${count}
+    ${rows}    Read Rows    SELECT COUNT(*) FROM ${table}
+    Should Be Equal As Integers    ${rows}[0][0]    ${count}
+{%- if database_driver != 'sqlite' %}
+
+Database Should Respond
+    [Documentation]    Checks that the database answers a simple query.
+    ${rows}    Read Rows    ${DB_PING_SQL}
+    Should Not Be Empty    ${rows}
+{%- endif %}

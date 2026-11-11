@@ -1,0 +1,13 @@
+*** Settings ***
+Documentation       Ability "talk to an interface": imports {{ 'the RequestsLibrary' if api_library == 'requests' else 'RESTinstance' }}
+...                 and provides the address and endpoints. No keywords - they live in interactions/.
+Resource            ${EXECDIR}/resources/main.resource
+Library             {{ 'RequestsLibrary' if api_library == 'requests' else 'REST' }}
+
+
+*** Variables ***
+# Address of the interface in the active environment (values in main.resource, URLS).
+# Example: the open test API jsonplaceholder.typicode.com (no login)
+${API_BASE_URL}     ${URLS}[${ENV}][api]
+${API_TODOS}        /todos
+${API_POSTS}        /posts

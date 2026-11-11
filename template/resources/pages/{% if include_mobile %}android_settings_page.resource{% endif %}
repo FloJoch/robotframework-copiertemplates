@@ -1,0 +1,7 @@
+*** Settings ***
+Documentation       Page object "Android settings": selectors of the app. {text} is replaced.
+
+
+*** Variables ***
+${ANDROID_SETTINGS_ENTRY}       android=new UiSelector().text("{text}")
+${ANDROID_SETTINGS_TEXT}        android=new UiSelector().textContains("{text}")

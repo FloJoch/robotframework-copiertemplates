@@ -1,0 +1,12 @@
+*** Settings ***
+Documentation       Business actions with documents - these keywords are used in tests.
+Resource            ${EXECDIR}/resources/interactions/doctest_interactions.resource
+
+
+*** Keywords ***
+Get Document
+    [Documentation]    Returns the path of a document from the folder data/reference.
+    ...    In real tests the document comes e.g. from a download or a screenshot.
+    [Arguments]    ${file_name}
+    ${path}    Reference File    ${file_name}
+    RETURN    ${path}

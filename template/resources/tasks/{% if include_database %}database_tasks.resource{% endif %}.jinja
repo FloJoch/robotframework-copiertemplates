@@ -1,0 +1,35 @@
+*** Settings ***
+Documentation       Business actions with customer data in the database - these keywords are used in tests.
+Resource            ${EXECDIR}/resources/interactions/database_interactions.resource
+
+
+*** Keywords ***
+Start Example Database
+    [Documentation]    Connects to the example database and creates the table "customer".
+    Connect To Example Database
+    Run Sql    CREATE TABLE customer (id INTEGER PRIMARY KEY, name TEXT, city TEXT)
+{%- if database_driver != 'sqlite' %}
+
+Use Own Database
+    [Documentation]    Connects to your own database.
+    Connect To Own Database
+{%- endif %}
+
+Close Database
+    [Documentation]    Closes the connection to the database.
+    Disconnect Database
+
+Create Customer
+    [Documentation]    Creates a customer with name and city.
+    [Arguments]    ${name}    ${city}
+    Run Sql    INSERT INTO customer (name, city) VALUES ('${name}', '${city}')
+
+Change City
+    [Documentation]    Changes the city of a customer.
+    [Arguments]    ${name}    ${new_city}
+    Run Sql    UPDATE customer SET city = '${new_city}' WHERE name = '${name}'
+
+Delete Customer
+    [Documentation]    Deletes a customer.
+    [Arguments]    ${name}
+    Run Sql    DELETE FROM customer WHERE name = '${name}'

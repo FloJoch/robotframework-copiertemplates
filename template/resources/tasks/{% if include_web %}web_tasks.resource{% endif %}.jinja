@@ -1,0 +1,40 @@
+*** Settings ***
+Documentation       Business actions in the web shop - these keywords are used in tests.
+...                 Example: demo shop saucedemo.com.
+Resource            ${EXECDIR}/resources/interactions/{{ 'browser' if web_library == 'browser' else 'selenium' }}_interactions.resource
+
+
+*** Keywords ***
+Start Browser
+    [Documentation]    Starts the browser. Belongs in the test setup.
+    Launch Browser
+
+Stop Browser
+    [Documentation]    Closes the browser. Belongs in the test teardown.
+    Close All Web Browsers
+
+Open Login Page
+    [Documentation]    Opens the login page of the application.
+    Go To Address    ${WEB_BASE_URL}
+
+Log In
+    [Documentation]    Logs in. Without arguments with the credentials of the active environment (main.resource).
+    [Arguments]    ${user}=${LOGINS}[${ENV}][username]    ${password}=${LOGINS}[${ENV}][password]
+    Fill Field    ${LOGIN_USERNAME_FIELD}    ${user}
+    Fill Secret Field    ${LOGIN_PASSWORD_FIELD}    ${password}
+    Click On    ${LOGIN_BUTTON}
+
+Add Product To Cart
+    [Documentation]    Adds a product to the cart, e.g. "sauce-labs-backpack".
+    [Arguments]    ${product}
+    ${button}    Build Selector    ${MAIN_ADD_TO_CART_BUTTON}    product=${product}
+    Click On    ${button}
+
+Open Cart
+    [Documentation]    Opens the cart.
+    Click On    ${MAIN_CART_LINK}
+
+Log Out
+    [Documentation]    Logs out via the menu.
+    Click On    ${SETTINGS_MENU_BUTTON}
+    Click On    ${SETTINGS_LOGOUT_LINK}

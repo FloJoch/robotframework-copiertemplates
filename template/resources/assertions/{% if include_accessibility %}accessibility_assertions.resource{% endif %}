@@ -1,0 +1,18 @@
+*** Settings ***
+Documentation       Generic accessibility checks - these keywords are used in tests.
+Resource            ${EXECDIR}/resources/interactions/accessibility_interactions.resource
+
+
+*** Keywords ***
+Page Should Have No Serious Violations
+    [Documentation]    Checks that there are no serious or critical violations.
+    ...    Which impacts count is set in abilities/browser_ability.resource (A11Y_BLOCKING_IMPACTS).
+    [Arguments]    ${violations}
+    VAR    @{blocking}    @{EMPTY}
+    FOR    ${violation}    IN    @{violations}
+        IF    $violation['impact'] in $A11Y_BLOCKING_IMPACTS
+            VAR    ${text}    ${violation['impact']}: ${violation['help']} (${violation['id']}, ${violation['count']}x)
+            VAR    @{blocking}    @{blocking}    ${text}
+        END
+    END
+    Should Be Empty    ${blocking}    Accessibility violated: ${blocking}

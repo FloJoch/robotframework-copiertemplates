@@ -1,0 +1,31 @@
+*** Settings ***
+Documentation       Technical helper keywords for databases. Only here are keywords of the DatabaseLibrary used.
+Resource            ${EXECDIR}/resources/abilities/database_ability.resource
+Keyword Tags        interaction
+
+
+*** Keywords ***
+Connect To Example Database
+    [Documentation]    Connects to the example database (details in the ability).
+    Connect To Database    ${EXAMPLE_DB_MODULE}    database=${EXAMPLE_DB_NAME}    isolation_level=${None}
+{%- if database_driver != 'sqlite' %}
+
+Connect To Own Database
+    [Documentation]    Connects to your own database (details in the ability).
+    Connect To Database    ${DB_MODULE}    ${DB_NAME}    ${DB_USER}    ${DB_PASSWORD}    ${DB_HOST}    ${DB_PORT}
+{%- endif %}
+
+Run Sql
+    [Documentation]    Runs an SQL statement that creates, changes or deletes data.
+    [Arguments]    ${sql}
+    Execute Sql String    ${sql}
+
+Read Rows
+    [Documentation]    Runs an SQL query and returns the rows.
+    [Arguments]    ${sql}
+    ${rows}    Query    ${sql}
+    RETURN    ${rows}
+
+Disconnect Database
+    [Documentation]    Closes the connection to the database.
+    Disconnect From Database

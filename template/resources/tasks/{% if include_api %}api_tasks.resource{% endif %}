@@ -1,0 +1,23 @@
+*** Settings ***
+Documentation       Business actions with the interface - these keywords are used in tests.
+Resource            ${EXECDIR}/resources/interactions/api_interactions.resource
+
+
+*** Keywords ***
+Fetch Todo
+    [Documentation]    Fetches the todo with the given number and returns the response.
+    [Arguments]    ${number}
+    ${response}    Send Get Request    ${API_TODOS}/${number}
+    RETURN    ${response}
+
+Fetch Todos Of User
+    [Documentation]    Fetches all todos of a user and returns the response.
+    [Arguments]    ${user}
+    ${response}    Send Get Request    ${API_TODOS}    userId=${user}
+    RETURN    ${response}
+
+Create Post
+    [Documentation]    Creates a new post with title and text and returns the response.
+    [Arguments]    ${title}    ${text}    ${user}=1
+    ${response}    Send Post Request    ${API_POSTS}    title=${title}    body=${text}    userId=${user}
+    RETURN    ${response}

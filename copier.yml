@@ -1,0 +1,291 @@
+# copier.yml - dialog, conditions, setup steps
+# See docs/specification.md §4. Help texts and choice labels are rendered with Jinja,
+# so the dialog can speak German or English (question "language").
+# The areas are picked in one multi-select list; only the matching library questions follow.
+
+_min_copier_version: "9.4.0"
+_subdirectory: template
+_templates_suffix: .jinja
+_answers_file: .copier-answers.yml
+
+# ---------------------------------------------------------------- Language and name
+language:
+  type: str
+  qmark: "🌐 "
+  help: "Sprache für den Dialog / Language for this dialog"
+  choices:
+    Deutsch: de
+    English: en
+  default: de
+
+project_name:
+  type: str
+  qmark: "📁 "
+  help: "{% if language == 'en' %}Project name? (Enter keeps the folder name){% else %}Wie heißt das Projekt? (Enter übernimmt den Ordnernamen){% endif %}"
+  # Default is the name of the target folder - usually the project folder the command runs in (target ".").
+  default: "{{ _folder_name }}"
+  validator: "{% if not project_name.strip() %}{% if language == 'en' %}Please enter a name{% else %}Bitte einen Namen angeben{% endif %}{% endif %}"
+
+project_slug:
+  type: str
+  default: "{{ project_name.lower().replace(' ', '-') }}"
+  when: false
+
+# Robot Framework version of this branch. Not asked and not stored in .copier-answers.yml, so every
+# "copier update" takes the value of the template version it updates to.
+# Older versions live on branches named rf-<version> - see docs/versions-and-updates.md.
+rf_version:
+  type: str
+  default: "7.5.1"
+  when: false
+
+# Python version of this branch - chosen to match rf_version and the libraries (not always the newest Python:
+# libraries often follow later). Like rf_version: not asked, not stored, set per rf-* branch.
+python_version:
+  type: str
+  default: "3.13"
+  when: false
+
+# ---------------------------------------------------------------- What should be tested?
+# One multi-select list (Space toggles, Enter confirms); "basic" and "extended" only group the entries.
+test_areas:
+  type: str
+  multiselect: true
+  qmark: "🧪 "
+  help: "{% if language == 'en' %}What do you want to test? (Space: select, Enter: confirm){% else %}Was möchtest du testen? (Leertaste: auswählen, Enter: bestätigen){% endif %}"
+  choices:
+    "{% if language == 'en' %}Basic    · 🌍 Web            - open pages in a browser, check texts{% else %}Basis    · 🌍 Web              - Seiten im Browser öffnen, Texte prüfen{% endif %}": web
+    "{% if language == 'en' %}Basic    · 🔌 API            - call REST interfaces, check responses{% else %}Basis    · 🔌 API              - REST-Schnittstellen aufrufen, Antworten prüfen{% endif %}": api
+    "{% if language == 'en' %}Extended · 📧 E-mail         - wait for and read e-mails (ImapLibrary2){% else %}Erweitert· 📧 E-Mail           - auf E-Mails warten und lesen (ImapLibrary2){% endif %}": email
+    "{% if language == 'en' %}Extended · 💾 Database       - read and check data with SQL{% else %}Erweitert· 💾 Datenbank        - Daten per SQL lesen und prüfen{% endif %}": database
+    "{% if language == 'en' %}Extended · 🎲 Test data      - names, addresses, e-mails (FakerLibrary){% else %}Erweitert· 🎲 Testdaten        - Namen, Adressen, E-Mails (FakerLibrary){% endif %}": faker
+    "{% if language == 'en' %}Extended · 📄 PDF and images - check and compare (DocTestLibrary){% else %}Erweitert· 📄 PDF und Bilder   - prüfen und vergleichen (DocTestLibrary){% endif %}": doctest
+    "{% if language == 'en' %}Extended · 🔍 Accessibility  - axe-core, HTML report per page{% else %}Erweitert· 🔍 Barrierefreiheit - axe-core, HTML-Bericht je Seite{% endif %}": accessibility
+    "{% if language == 'en' %}Extended · 💻 Desktop        - Windows applications (PlatynUI){% else %}Erweitert· 💻 Desktop          - Windows-Anwendungen (PlatynUI){% endif %}": desktop
+    "{% if language == 'en' %}Extended · 📱 Mobile         - Android apps (AppiumLibrary){% else %}Erweitert· 📱 Mobile           - Android-Apps (AppiumLibrary){% endif %}": mobile
+    "{% if language == 'en' %}Extended · 🏢 SAP GUI        - Windows (RoboSAPiens){% else %}Erweitert· 🏢 SAP GUI          - Windows (RoboSAPiens){% endif %}": sap
+  default: [web]
+
+# ---------------------------------------------------------------- Library - only where there is a choice
+# "other" = the area is wanted, but with a different or own library: no example files are generated, the final
+# message, project README and skills explain how to add it. "none" = back, area not wanted after all.
+# Areas with only one library (e-mail, test data, PDF/images, accessibility, desktop, mobile, SAP) ask nothing.
+web_library:
+  type: str
+  qmark: "🌍 "
+  help: "{% if language == 'en' %}Web: which browser library?{% else %}Web: welche Browser-Bibliothek?{% endif %}"
+  when: "{{ 'web' in test_areas }}"
+  choices:
+    "{% if language == 'en' %}Browser Library (Playwright) - modern, fast, waits automatically (recommended){% else %}Browser Library (Playwright) - modern, schnell, wartet automatisch (empfohlen){% endif %}": browser
+    "{% if language == 'en' %}SeleniumLibrary (Selenium)   - proven standard, uses Chrome{% else %}SeleniumLibrary (Selenium)   - bewährter Standard, nutzt Chrome{% endif %}": selenium
+    "{% if language == 'en' %}Other / own library           - none of these, I add my own{% else %}Andere / eigene Bibliothek    - keine davon, ich installiere eine eigene nach{% endif %}": other
+    "{% if language == 'en' %}↩ Back - no web tests after all{% else %}↩ Zurück - doch keine Web-Tests{% endif %}": none
+  default: browser
+
+api_library:
+  type: str
+  qmark: "🔌 "
+  help: "{% if language == 'en' %}API: which library?{% else %}API: welche Bibliothek?{% endif %}"
+  when: "{{ 'api' in test_areas }}"
+  choices:
+    "{% if language == 'en' %}RequestsLibrary - simple and widespread (recommended){% else %}RequestsLibrary - einfach und weit verbreitet (empfohlen){% endif %}": requests
+    "{% if language == 'en' %}RESTinstance    - JSON checks with schemas{% else %}RESTinstance    - JSON-Prüfungen mit Schemas{% endif %}": restinstance
+    "{% if language == 'en' %}Other / own library - none of these, I add my own{% else %}Andere / eigene Bibliothek - keine davon, ich installiere eine eigene nach{% endif %}": other
+    "{% if language == 'en' %}↩ Back - no API tests after all{% else %}↩ Zurück - doch keine API-Tests{% endif %}": none
+  default: requests
+
+database_driver:
+  type: str
+  qmark: "💾 "
+  help: "{% if language == 'en' %}Database: which one? (DatabaseLibrary; the example always runs with SQLite){% else %}Datenbank: welche? (DatabaseLibrary; das Beispiel läuft immer mit SQLite){% endif %}"
+  when: "{{ 'database' in test_areas }}"
+  choices:
+    "{% if language == 'en' %}SQLite            - no server needed{% else %}SQLite            - ohne Server{% endif %}": sqlite
+    "PostgreSQL        - psycopg2": postgresql
+    "MySQL / MariaDB   - PyMySQL": mysql
+    "{% if language == 'en' %}Other / own library - none of these, I add my own{% else %}Andere / eigene Bibliothek - keine davon, ich installiere eine eigene nach{% endif %}": other
+    "{% if language == 'en' %}↩ Back - no database tests after all{% else %}↩ Zurück - doch keine Datenbank-Tests{% endif %}": none
+  default: sqlite
+
+# ---------------------------------------------------------------- Tools
+ci_provider:
+  type: str
+  qmark: "🚀 "
+  help: "{% if language == 'en' %}Create a CI pipeline? (runs the tests on every push){% else %}CI-Pipeline erzeugen? (führt die Tests bei jedem Push aus){% endif %}"
+  choices:
+    "GitLab CI": gitlab
+    "GitHub Actions": github
+    "{% if language == 'en' %}None{% else %}Keine{% endif %}": none
+  default: gitlab
+
+# ---------------------------------------------------------------- Computed (not asked)
+# An area gets example files when it is selected and - for web, API and database - its library is neither
+# "other" nor "back".
+include_gitlab_ci:
+  type: bool
+  default: "{{ ci_provider == 'gitlab' }}"
+  when: false
+
+include_github_ci:
+  type: bool
+  default: "{{ ci_provider == 'github' }}"
+  when: false
+
+include_web:
+  type: bool
+  default: "{{ 'web' in test_areas and web_library not in ['none', 'other'] }}"
+  when: false
+
+include_api:
+  type: bool
+  default: "{{ 'api' in test_areas and api_library not in ['none', 'other'] }}"
+  when: false
+
+include_database:
+  type: bool
+  default: "{{ 'database' in test_areas and database_driver not in ['none', 'other'] }}"
+  when: false
+
+include_email:
+  type: bool
+  default: "{{ 'email' in test_areas }}"
+  when: false
+
+include_faker:
+  type: bool
+  default: "{{ 'faker' in test_areas }}"
+  when: false
+
+include_doctest:
+  type: bool
+  default: "{{ 'doctest' in test_areas }}"
+  when: false
+
+include_accessibility:
+  type: bool
+  default: "{{ 'accessibility' in test_areas }}"
+  when: false
+
+include_desktop:
+  type: bool
+  default: "{{ 'desktop' in test_areas }}"
+  when: false
+
+include_mobile:
+  type: bool
+  default: "{{ 'mobile' in test_areas }}"
+  when: false
+
+include_sap:
+  type: bool
+  default: "{{ 'sap' in test_areas }}"
+  when: false
+
+# Areas for which an own library was chosen (shown in the final message, project README and skills).
+own_library_areas:
+  type: yaml
+  default: "{{ ((['web'] if 'web' in test_areas and web_library == 'other' else []) + (['api'] if 'api' in test_areas and api_library == 'other' else []) + (['database'] if 'database' in test_areas and database_driver == 'other' else [])) | tojson }}"
+  when: false
+
+# Short names for conditions in file names - long conditions make the paths too long on Windows.
+use_browser:
+  type: bool
+  default: "{{ (include_web and web_library == 'browser') or include_accessibility }}"
+  when: false
+
+use_selenium:
+  type: bool
+  default: "{{ include_web and web_library == 'selenium' }}"
+  when: false
+
+use_pages:
+  type: bool
+  default: "{{ include_web or include_accessibility }}"
+  when: false
+
+use_db_server:
+  type: bool
+  default: "{{ include_database and database_driver != 'sqlite' }}"
+  when: false
+
+# ---------------------------------------------------------------- Setup after generation
+_tasks:
+  - command: git init --quiet
+  - command: uv sync
+  - command: uv run rfbrowser init chromium
+    when: "{{ (include_web and web_library == 'browser') or include_accessibility }}"
+  - command: npm install --silent
+    when: "{{ include_accessibility }}"
+  - command: uv run robotcode -p check robot
+
+# Colours: ANSI escape codes (Jinja turns '\x1b' into the escape character).
+# Kept short on purpose: while the dialog runs, Copier captures the mouse wheel (the list reacts to it), so the
+# terminal cannot be scrolled up. Everything shown here must fit into a small window.
+_message_before_copy: |
+  {%- set b = '\x1b[1m' %}{% set c = '\x1b[36m' %}{% set g = '\x1b[32m' %}{% set d = '\x1b[2m' %}{% set r = '\x1b[0m' %}
+  {#- Same version as rf_version above - a test checks that both match. #}
+  {%- set version = "7.5.1" %}
+
+  {{ b }}{{ c }}Robot Framework {{ version }} - neues Projekt / new project{{ r }}
+  {{ b }}Ziel / target:{{ r }} {{ g }}{{ _folder_name }}{{ r }}{% if _copier_conf.dst_path | string == '.' %} (aktueller Ordner / current folder){% else %} ({{ _copier_conf.dst_path }}){% endif %}
+  {{ d }}Dateien kommen hier hinein. Falsch? Strg+C, cd, neu starten.{{ r }}
+  {{ b }}Immer dabei / always:{{ r }} CryptoLibrary, Robocop, RobotCode
+  {{ b }}Basis / basic:{{ r }} Web, API
+  {{ b }}Erweitert / extended:{{ r }} E-Mail, Datenbank, Testdaten, PDF/Bilder,
+    Barrierefreiheit, Desktop, Mobile, SAP
+  Leertaste = ankreuzen   {{ g }}{{ b }}Enter = Auswahl bestätigen{{ r }}   Strg+C = abbrechen
+  {{ d }}Space = tick, Enter = confirm. Mausrad/mouse wheel: erst nach dem Dialog.{{ r }}
+
+_message_after_copy: |
+  {%- set b = '\x1b[1m' %}{% set g = '\x1b[32m' %}{% set c = '\x1b[36m' %}{% set r = '\x1b[0m' %}
+  {%- if language == 'en' %}
+  {{ g }}{{ b }}Done! The project is set up.{{ r }}
+  Git, Python environment (.venv){% if (include_web and web_library == 'browser') or include_accessibility %}, browser{% endif %}{% if include_accessibility %}, axe-core{% endif %} and the syntax check are already done.
+
+  {{ b }}Next steps{{ r }}
+  {%- if _copier_conf.dst_path | string != '.' %}
+    cd {{ _copier_conf.dst_path }}
+  {%- endif %}
+    code .                     {{ c }}# open VS Code, install the recommended extensions{{ r }}
+    uv run robotcode robot     {{ c }}# run the hello world tests{{ r }}
+    then open results/report.html
+
+  {{ b }}Coding assistant (Agent Skills){{ r }}
+    The skills are in .agents/skills/: robot-project, robot-write-test, robot-explain-results.
+    Open the project folder in an assistant that supports Agent Skills and just ask,
+    e.g. "Write a test: login with a wrong password shows an error message".
+    If your tool expects another folder, copy the skill folders there (README: "Coding assistants").
+
+  {%- if own_library_areas %}
+  {%- set names = {'web': 'web', 'api': 'API', 'database': 'database'} %}
+  {{ b }}Own library{{ r }} for: {% for a in own_library_areas %}{{ names[a] }}{{ ', ' if not loop.last }}{% endfor %}
+    uv add <package>, then add an ability and interactions (README: "Adding more libraries").
+  {%- endif %}
+
+  More libraries later: uv add <package>, then add an ability and interactions (README: "Adding more libraries").
+  {%- else %}
+  {{ g }}{{ b }}Fertig! Das Projekt ist eingerichtet.{{ r }}
+  Git, Python-Umgebung (.venv){% if (include_web and web_library == 'browser') or include_accessibility %}, Browser{% endif %}{% if include_accessibility %}, axe-core{% endif %} und der Syntax-Check sind bereits erledigt.
+
+  {{ b }}So geht es weiter{{ r }}
+  {%- if _copier_conf.dst_path | string != '.' %}
+    cd {{ _copier_conf.dst_path }}
+  {%- endif %}
+    code .                     {{ c }}# VS Code öffnen, empfohlene Erweiterungen installieren{{ r }}
+    uv run robotcode robot     {{ c }}# Hello-World-Tests ausführen{{ r }}
+    danach results/report.html öffnen
+
+  {{ b }}KI-Assistent (Agent Skills){{ r }}
+    Die Skills liegen in .agents/skills/: robot-project, robot-write-test, robot-explain-results.
+    Projektordner in einem Assistenten mit Agent-Skills-Unterstützung öffnen und einfach fragen,
+    z. B. „Schreib einen Test: Anmeldung mit falschem Passwort zeigt eine Fehlermeldung“.
+    Erwartet dein Werkzeug einen anderen Ordner, die Skill-Ordner dorthin kopieren (README: "Coding assistants").
+
+  {%- if own_library_areas %}
+  {%- set names = {'web': 'Web', 'api': 'API', 'database': 'Datenbank'} %}
+  {{ b }}Eigene Bibliothek{{ r }} für: {% for a in own_library_areas %}{{ names[a] }}{{ ', ' if not loop.last }}{% endfor %}
+    uv add <paket>, dann Ability und Interactions anlegen (README: "Adding more libraries").
+  {%- endif %}
+
+  Weitere Bibliotheken später: uv add <paket>, dann Ability und Interactions anlegen (README: "Adding more libraries").
+  {%- endif %}

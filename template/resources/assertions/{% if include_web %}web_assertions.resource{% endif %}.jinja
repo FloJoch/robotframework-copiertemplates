@@ -1,0 +1,31 @@
+*** Settings ***
+Documentation       Generic checks in the browser - these keywords are used in tests.
+...                 The selectors come from the page objects (resources/pages/).
+Resource            ${EXECDIR}/resources/interactions/{{ 'browser' if web_library == 'browser' else 'selenium' }}_interactions.resource
+
+
+*** Keywords ***
+Element Should Be Shown
+    [Documentation]    Checks that the element is visible.
+    [Arguments]    ${selector}
+    Wait For Visible Element    ${selector}
+
+Element Should Show Text
+    [Documentation]    Checks that the element shows exactly this text.
+    [Arguments]    ${selector}    ${text}
+    Wait For Text    ${selector}    ${text}
+
+Element Text Should Include
+    [Documentation]    Checks that the text of the element includes the expected part.
+    [Arguments]    ${selector}    ${part}
+    Wait For Text Part    ${selector}    ${part}
+
+Number Of Elements Should Be
+    [Documentation]    Checks how many elements match the selector.
+    [Arguments]    ${selector}    ${count}
+    Wait For Element Count    ${selector}    ${count}
+
+Address Should Include
+    [Documentation]    Checks that the address in the browser includes the part.
+    [Arguments]    ${part}
+    Wait For Address Part    ${part}

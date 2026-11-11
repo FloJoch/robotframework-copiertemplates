@@ -1,0 +1,28 @@
+*** Settings ***
+Documentation       Technical helper keywords for image and PDF comparisons. Only here are keywords of the
+...                 DocTestLibrary used.
+Resource            ${EXECDIR}/resources/abilities/doctest_ability.resource
+Keyword Tags        interaction
+
+
+*** Keywords ***
+Reference File
+    [Documentation]    Returns the full path of a reference file.
+    [Arguments]    ${file_name}
+    RETURN    ${REFERENCE_DIR}/${file_name}
+
+Compare Two Images
+    [Documentation]    Compares two images. Visible differences make the step fail
+    ...    and the log shows them.
+    [Arguments]    ${reference}    ${candidate}
+    Compare Images    ${reference}    ${candidate}
+
+Compare Two Pdfs
+    [Documentation]    Compares two PDF files (appearance and text).
+    [Arguments]    ${reference}    ${candidate}
+    Compare Pdf Documents    ${reference}    ${candidate}
+
+Check Texts In Pdf
+    [Documentation]    Checks that all texts occur in the PDF.
+    [Arguments]    ${pdf}    @{texts}
+    PDF Should Contain Strings    ${texts}    ${pdf}

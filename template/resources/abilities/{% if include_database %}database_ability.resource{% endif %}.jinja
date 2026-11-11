@@ -1,0 +1,24 @@
+*** Settings ***
+Documentation       Ability "work with databases": imports the DatabaseLibrary and provides the connection
+...                 data. No keywords - they live in interactions/.
+Resource            ${EXECDIR}/resources/main.resource
+Library             DatabaseLibrary
+
+
+*** Variables ***
+# ---------- Example database: in-memory SQLite (no server, for the hello world tests)
+${EXAMPLE_DB_MODULE}    sqlite3
+${EXAMPLE_DB_NAME}      :memory:
+{%- if database_driver != 'sqlite' %}
+
+# ---------- Own database ({{ 'PostgreSQL' if database_driver == 'postgresql' else 'MySQL/MariaDB' }}) - enter your values here.
+# User and password come from main.resource (LOGINS), the password encrypted with the CryptoLibrary.
+${DB_MODULE}            {{ 'psycopg2' if database_driver == 'postgresql' else 'pymysql' }}
+${DB_HOST}              localhost
+${DB_PORT}              {{ '5432' if database_driver == 'postgresql' else '3306' }}
+${DB_NAME}              testdb
+${DB_USER}              ${LOGINS}[${ENV}][username]
+${DB_PASSWORD}          ${LOGINS}[${ENV}][password]
+# Simple query to check that the database responds
+${DB_PING_SQL}          SELECT 1
+{%- endif %}

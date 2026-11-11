@@ -1,0 +1,17 @@
+*** Settings ***
+Documentation       Generic checks of e-mails - these keywords are used in tests.
+Resource            ${EXECDIR}/resources/interactions/email_interactions.resource
+
+
+*** Keywords ***
+Email Should Include Text
+    [Documentation]    Checks that the text of the e-mail includes the expected text.
+    [Arguments]    ${email}    ${expected}
+    ${text}    Read Email Text    ${email}
+    Should Contain    ${text}    ${expected}
+
+Email Should Include Link
+    [Documentation]    Checks that the e-mail contains a link starting with the address.
+    [Arguments]    ${email}    ${address}
+    ${links}    Read Links In Email    ${email}
+    Should Contain Match    ${links}    ${address}*

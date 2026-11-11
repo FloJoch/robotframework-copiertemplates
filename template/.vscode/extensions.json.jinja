@@ -1,0 +1,15 @@
+{
+  "recommendations": [
+    "d-biehl.robotcode",
+    "ms-python.python"
+{%- if include_gitlab_ci %},
+    "gitlab.gitlab-workflow"
+{%- endif %}
+{%- if include_github_ci %},
+    "github.vscode-github-actions"
+{%- endif %}
+  ],
+  "unwantedRecommendations": [
+    "robocorp.robotframework-lsp"
+  ]
+}

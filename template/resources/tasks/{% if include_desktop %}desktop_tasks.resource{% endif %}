@@ -1,0 +1,20 @@
+*** Settings ***
+Documentation       Business actions in the Windows calculator - these keywords are used in tests.
+Resource            ${EXECDIR}/resources/interactions/desktop_interactions.resource
+
+
+*** Keywords ***
+Start Calculator
+    [Documentation]    Starts the calculator and waits for its window.
+    Launch Program
+    Wait For Window    ${calculator}
+    Focus Element    ${calculator.result}
+
+Calculate
+    [Documentation]    Calculates the expression, e.g. "12+30" or "6*7".
+    [Arguments]    ${expression}
+    Type Into Window    ${calculator}    ${expression}\=
+
+Close Calculator
+    [Documentation]    Closes the calculator.
+    Close Program

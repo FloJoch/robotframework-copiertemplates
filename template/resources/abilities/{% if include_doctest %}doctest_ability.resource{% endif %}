@@ -1,0 +1,11 @@
+*** Settings ***
+Documentation       Ability "compare images and PDFs": imports the DocTestLibrary and names the folder with
+...                 the reference files. No keywords - they live in interactions/.
+Resource            ${EXECDIR}/resources/main.resource
+Library             DocTest.VisualTest
+Library             DocTest.PdfTest
+
+
+*** Variables ***
+# Reference files ("this is how it should look")
+${REFERENCE_DIR}    ${EXECDIR}/data/reference

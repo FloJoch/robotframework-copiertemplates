@@ -1,0 +1,644 @@
+{%- set browser_lib = (include_web and web_library == 'browser') or include_accessibility -%}
+{%- set libs = [] -%}
+{%- if include_web and web_library == 'browser' %}{% set _ = libs.append(('Browser Library (Playwright)', 'operate and check web pages in the browser', 'tests/web/', 'https://marketsquare.github.io/robotframework-browser/Browser.html')) %}{% endif -%}
+{%- if include_web and web_library == 'selenium' %}{% set _ = libs.append(('SeleniumLibrary', 'operate and check web pages in the browser', 'tests/web/', 'https://robotframework.org/SeleniumLibrary/SeleniumLibrary.html')) %}{% endif -%}
+{%- if include_accessibility and not (include_web and web_library == 'browser') %}{% set _ = libs.append(('Browser Library (Playwright)', 'browser for the accessibility checks', 'tests/accessibility/', 'https://marketsquare.github.io/robotframework-browser/Browser.html')) %}{% endif -%}
+{%- if include_api and api_library == 'requests' %}{% set _ = libs.append(('RequestsLibrary', 'call REST interfaces and check responses', 'tests/api/', 'https://marketsquare.github.io/robotframework-requests/doc/RequestsLibrary.html')) %}{% endif -%}
+{%- if include_api and api_library == 'restinstance' %}{% set _ = libs.append(('RESTinstance', 'call REST interfaces and check responses', 'tests/api/', 'https://asyrjasalo.github.io/RESTinstance/')) %}{% endif -%}
+{%- if include_database %}{% set _ = libs.append(('DatabaseLibrary', 'create, read and check data with SQL', 'tests/database/', 'https://marketsquare.github.io/Robotframework-Database-Library/')) %}{% endif -%}
+{%- if include_desktop %}{% set _ = libs.append(('PlatynUI', 'operate and read Windows programs', 'tests/desktop/', 'https://github.com/imbus/robotframework-PlatynUI')) %}{% endif -%}
+{%- if include_mobile %}{% set _ = libs.append(('AppiumLibrary', 'operate and check Android apps', 'tests/mobile/', 'https://serhatbolsu.github.io/robotframework-appiumlibrary/AppiumLibrary.html')) %}{% endif -%}
+{%- if include_faker %}{% set _ = libs.append(('FakerLibrary', 'generate fake test data (names, addresses ...)', 'tests/testdata/', 'https://guykisel.github.io/robotframework-faker/')) %}{% endif -%}
+{%- if include_email %}{% set _ = libs.append(('ImapLibrary2', 'wait for and check e-mails', 'tests/email/', 'https://github.com/lasselindqvist/robotframework-imaplibrary2')) %}{% endif -%}
+{%- if include_doctest %}{% set _ = libs.append(('DocTestLibrary', 'compare and check images and PDFs', 'tests/documents/', 'https://github.com/manykarim/robotframework-doctestlibrary')) %}{% endif -%}
+{%- if include_sap %}{% set _ = libs.append(('RoboSAPiens', 'operate SAP GUI via visible labels', 'tests/sap/', 'https://github.com/imbus/robotframework-robosapiens')) %}{% endif -%}
+{%- if include_accessibility %}{% set _ = libs.append(('axe-core', 'check web pages for accessibility, with HTML report', 'tests/accessibility/', 'https://dequeuniversity.com/rules/axe/')) %}{% endif -%}
+# {{ project_name }}
+
+Automated tests with [Robot Framework](https://robotframework.org/) {{ rf_version }}.
+
+## Contents
+
+- [Quick start](#quick-start)
+- [What is included?](#what-is-included)
+- [Set up VS Code](#set-up-vs-code)
+- [How the project is structured](#how-the-project-is-structured)
+- [Setup and teardown](#setup-and-teardown)
+- [Running tests: profiles](#running-tests-profiles)
+- [Environments and credentials](#environments-and-credentials)
+- [Reading the results](#reading-the-results)
+- [Writing your first own test](#writing-your-first-own-test)
+- [Coding assistants (Agent Skills)](#coding-assistants-agent-skills)
+- [Adding more libraries](#adding-more-libraries)
+- [Notes on the libraries](#notes-on-the-libraries)
+{%- if include_gitlab_ci %}
+- [GitLab CI](#gitlab-ci)
+{%- endif %}
+{%- if include_github_ci %}
+- [GitHub Actions](#github-actions)
+{%- endif %}
+- [Common errors](#common-errors)
+- [Glossary](#glossary)
+- [Learning and reference](#learning-and-reference)
+- [Updating from the template](#updating-from-the-template)
+
+## Quick start
+
+The project is already set up. Run the tests:
+
+```bash
+uv run robotcode robot
+```
+
+Then open `results/report.html` in the browser.
+
+<details>
+<summary>If the setup did not run (e.g. created without <code>--trust</code>)</summary>
+
+```bash
+git init
+uv sync
+{%- if browser_lib %}
+uv run rfbrowser init chromium
+{%- endif %}
+{%- if include_accessibility %}
+npm install
+{%- endif %}
+```
+
+Requirement: [uv](https://docs.astral.sh/uv/getting-started/installation/)
+{%- if browser_lib or include_mobile %} and [Node.js (LTS)](https://nodejs.org/)
+{%- endif %}.
+
+</details>
+
+## What is included?
+
+Always included: **Robot Framework {{ rf_version }}**, the standard libraries (Collections, DateTime,
+OperatingSystem, Process, String), the **CryptoLibrary** for passwords, **Robocop** for clean files,
+**RobotCode** to run the tests and **Agent Skills** for coding assistants (`.agents/skills/`). Plus the
+selected libraries - each with runnable example tests:
+
+| Library | Used for | Example tests | Documentation |
+|---------|----------|---------------|---------------|
+| CryptoLibrary | encrypt passwords and hide them in the log | `tests/core/` | <https://github.com/Snooz82/robotframework-crypto> |
+{%- for name, purpose, folder, docs in libs %}
+| {{ name }} | {{ purpose }} | `{{ folder }}` | <{{ docs }}> |
+{%- endfor %}
+
+Robot Framework is pinned to {{ rf_version }} (`pyproject.toml`). uv chose matching versions of the other
+libraries; they are frozen in `uv.lock`.
+
+## Set up VS Code
+
+1. Open the project folder: `code .`
+2. VS Code asks "Install recommended extensions?" in the bottom right → **Install**.
+3. The Python environment `.venv` is already set in `.vscode/settings.json`. If VS Code does not find it:
+   Ctrl+Shift+P → *Python: Select Interpreter* → `.venv`.
+
+| Extension | | Used for |
+|---|---|---|
+| RobotCode (`d-biehl.robotcode`) | **required** | auto-completion, run tests with a click, profiles |
+| Python (`ms-python.python`) | **required** | selects the project environment `.venv` |
+{%- if include_gitlab_ci %}
+| GitLab Workflow (`gitlab.gitlab-workflow`) | optional | pipelines in VS Code |
+{%- endif %}
+{%- if include_github_ci %}
+| GitHub Actions (`github.vscode-github-actions`) | optional | workflows in VS Code |
+{%- endif %}
+
+Do not install another Robot Framework extension next to it - it interferes with RobotCode. Start tests in a
+`.robot` file with ▶ next to the test case or in the test view (flask icon). The output appears in the normal
+terminal (`robotcode.debug.defaultConsole` in `.vscode/settings.json`; `internalConsole` shows it in the
+*Debug Console* instead).
+
+## How the project is structured
+
+The tests are **keyword-driven** and follow the **Screenplay pattern**: every layer has one job and only uses
+the layer below. At the top is **what** happens, at the bottom **how** it works technically. Everything
+except the tests lives in `resources/`. All imports start with `${EXECDIR}` (= project folder), e.g.
+`Resource    ${EXECDIR}/resources/tasks/web_tasks.resource`.
+
+```text
+tests/                   test cases
+  │  import only
+  ▼
+resources/tasks/         business actions, e.g.  Log In
+resources/assertions/    generic checks, e.g.    Element Should Show Text    ${MAIN_TITLE}    Products
+  │  import
+  ▼
+resources/interactions/  technical helper keywords (tag "interaction") - the only place with library keywords
+  │  import
+  ▼
+resources/abilities/     abilities: import one library each + its settings (no keywords)
+resources/pages/         page objects: selectors per page, e.g. login_page.resource
+  │
+  ▼
+resources/main.resource  standard libraries, CryptoLibrary, environments, credentials, global values
+```
+
+| Layer | Content | Used in tests |
+|-------|---------|---------------|
+| `tests/` | test cases built from tasks and assertions | - |
+| `resources/tasks/` | business actions with arguments, e.g. `Add Product To Cart    sauce-labs-backpack` | yes |
+| `resources/assertions/` | generic checks, e.g. `Number Of Elements Should Be`, `Status Code Should Be` | yes |
+| `resources/interactions/` | technical steps, e.g. `Fill Field`, `Run Sql` - tagged `interaction` | no |
+| `resources/pages/` | selectors of one page, names `PAGE_ELEMENT`, preferably `id=…` or `css=[data-test="…"]` | selectors only |
+| `resources/abilities/` | `Library` import and settings such as server addresses | - |
+| `resources/main.resource` | foundation for everything (see [environments](#environments-and-credentials)) | - |
+
+`resources/assertions/core_assertions.resource` is always included and contains generic checks such as
+`Value Should Be Filled`, `Value Should Equal` and `Text Should Include`.
+
+**Interactions are marked:** every interaction file has `Keyword Tags    interaction` in its settings. That
+way it is clear at a glance (also in RobotCode and in the log) which keywords belong in a test - tasks and
+assertions - and which do not.
+
+More files:
+
+| File / folder | Purpose |
+|---------------|---------|
+| `robot.toml` | profiles for running - identical locally, in VS Code and in CI |
+| `pyproject.toml`, `uv.lock` | Python packages with fixed versions |
+| `data/keys/` | keys of the CryptoLibrary (the private key is not committed) |
+{%- if include_doctest %}
+| `data/reference/` | reference images and PDFs ("this is how it should look") |
+{%- endif %}
+| `.agents/skills/` | Agent Skills for coding assistants: project knowledge, writing tests, explaining results - no internal data |
+| `results/` | results of the test runs, not committed |
+| `.copier-answers.yml` | answers at creation and origin of the template - for `copier update` |
+
+**Smaller project or a different style?** The layers are a suggestion. They can be merged into a basic
+structure of keywords, pages and tests (`resources/keywords/<area>.resource` instead of abilities, interactions,
+tasks and assertions), and other structures - e.g. by feature or page objects only - work as well. See the
+template documentation, "Simpler structure for small projects" (`docs/generated-projects.md`).
+
+> The folder `tasks/` contains reusable actions (keywords). It has nothing to do with the Robot Framework
+> section `*** Tasks ***` for process automation.
+
+## Setup and teardown
+
+Preparing and cleaning up steps - starting and closing the browser, connecting to a database or a mailbox -
+are **tasks**. That way they read well in the test:
+
+```robotframework
+*** Settings ***
+Test Setup          Start Browser        # before every test
+Test Teardown       Stop Browser         # after every test, even if it fails
+```
+
+- `Test Setup` / `Test Teardown` apply to every single test (every test starts clean).
+- `Suite Setup` / `Suite Teardown` apply once for the whole file (faster, tests share the state).
+- The technology behind it (e.g. `Launch Browser`) lives in the interactions, the settings (browser, window
+  size, speed) in `main.resource`. The abilities stay without keywords.
+
+## Running tests: profiles
+
+All settings for running live in `robot.toml` as **profiles**. A profile is a named set of settings - such as
+"environment test" or "only check syntax". Choose profiles with `-p`; several can be combined, later ones
+override earlier ones. Without `-p`, `dev` applies.
+
+```bash
+uv run robotcode [-p <profile> ...] robot [file or folder] [-t "Name Of The Test"]
+```
+
+| Profile | Effect |
+|---------|--------|
+| `dev` | environment dev (default) |
+| `test` | environment test |
+| `prod` | environment prod - read-only tests |
+| `smoke` | only quick core tests (tags `smoke` or `hello-world`) |
+| `check` | only check syntax and imports, run nothing - also for otherwise excluded tests |
+{%- if include_web or include_accessibility %}
+| `headed` | visible browser with a 0.5 s pause after every action - to watch |
+{%- endif %}
+{%- if include_desktop %}
+| `desktop` | only desktop tests (Windows) |
+{%- endif %}
+{%- if include_mobile %}
+| `mobile` | only mobile tests (Appium server and Android device or emulator) |
+{%- endif %}
+{%- if include_email %}
+| `email` | only e-mail tests (enter your mailbox) |
+{%- endif %}
+{%- if include_database and database_driver != 'sqlite' %}
+| `database` | only tests against your own database |
+{%- endif %}
+{%- if include_sap %}
+| `sap` | only SAP tests (Windows with a logged-in SAP GUI) |
+{%- endif %}
+| `ci` | for CI pipelines (GitLab CI, GitHub Actions): sets `${CI}`, writes a JUnit report |
+
+Examples:
+
+```bash
+uv run robotcode -p test robot                     # all tests against the environment test
+uv run robotcode -p test -p smoke robot            # only core tests against test
+uv run robotcode robot tests/core                  # only one folder
+uv run robotcode robot -t "Name Of The Test"       # a single test
+uv run robotcode profiles list                     # show all profiles with description
+```
+
+This is what a profile looks like - create your own profiles the same way:
+
+```toml
+[profiles.test]
+description = "Environment test"
+variables = { ENV = "test" }          # sets ${ENV} - main.resource uses it to read URLS and LOGINS
+
+[profiles.smoke]
+description = "Only quick core tests"
+includes = ["smoke", "hello-world"]   # only tests with these tags
+```
+
+More keys (e.g. `excludes`, `output-dir`, `dry-run`) are explained in the
+[RobotCode documentation on robot.toml](https://robotcode.io/03_reference/config). In VS Code, choose the
+profile in the test view via the gear icon.
+{%- if include_web or include_accessibility %}
+
+**Speed:** If the browser is too fast to watch, use `-p headed` (0.5 s pause after every action) or set
+`${BROWSER_SPEED}` in `resources/main.resource` permanently, e.g. `1s`.
+{%- endif %}
+
+## Environments and credentials
+
+Everything that differs between the environments lives in `resources/main.resource`:
+
+```robotframework
+${ENV}              dev                                   # active environment (profile -p dev/test/prod)
+&{URLS_TEST}        web=https://test.example.com    api=https://api.test.example.com
+&{LOGIN_TEST}       username=test-user    password=crypt:AbC...
+```
+
+They are read with `${URLS}[${ENV}][web]` and `${LOGINS}[${ENV}][username]`. Starting with `-p test`
+automatically uses the values of the test environment.
+{%- if include_web or include_accessibility %}
+The preset credentials are the public demo data of saucedemo.com - replace them with your own.
+{%- endif %}
+
+**Passwords are never stored in plain text** in files or in Git. That is what the
+[CryptoLibrary](https://github.com/Snooz82/robotframework-crypto) is for; its keys live in `data/keys/`:
+
+1. Create a key pair once: `uv run CryptoLibrary` → *Open config* → folder `data/keys` → *Generate key pair*.
+2. Encrypt a password: `uv run CryptoLibrary` → *Encrypt*. The result is a value like `crypt:AbC…`.
+3. Enter the value in `resources/main.resource`. It is decrypted automatically when the tests start.
+4. The **private** key (`data/keys/private_key*`) stays local (it is in `.gitignore`) and is stored as a
+   protected variable in CI. The public key may be committed.
+
+## Reading the results
+
+After every run, `results/` contains:
+
+- **`report.html`** - overview: how many tests passed or failed.
+- **`log.html`** - every step of every test with error messages{% if include_web %} and screenshots{% endif %}.
+- **`output.xml`** - machine-readable, basis for reports and CI.
+{%- if include_accessibility %}
+- **`accessibility/`** - one accessibility report per checked page (linked in the log).
+{%- endif %}
+
+In the log, expand the failed test and follow the red path to the first failed step. The message there is
+almost always the actual cause.
+
+## Writing your first own test
+
+1. **Write the flow in words:** what is given, what does one do, what should come out?
+2. **Look for existing building blocks** in `resources/tasks/` and `resources/assertions/`.
+3. **Add what is missing - bottom up:**
+   - new selectors in `resources/pages/` (one file per page, e.g. `profile_page.resource`)
+   - new technical steps in `resources/interactions/` (only if none fits)
+   - the action in `resources/tasks/`, a missing generic check in `resources/assertions/`
+4. **Create the test case** in `tests/<area>/` as a sequence of tasks and assertions:
+
+   ```robotframework
+   *** Settings ***
+{%- if include_web %}
+   Resource            ${EXECDIR}/resources/tasks/web_tasks.resource
+   Resource            ${EXECDIR}/resources/assertions/web_assertions.resource
+   Test Setup          Start Browser
+   Test Teardown       Stop Browser
+{%- else %}
+   Resource            ${EXECDIR}/resources/tasks/core_tasks.resource
+   Resource            ${EXECDIR}/resources/assertions/core_assertions.resource
+{%- endif %}
+
+   *** Test Cases ***
+   Name Describes The Expected Behaviour
+       [Documentation]    What is checked and why.
+       [Tags]    smoke
+{%- if include_web %}
+       Open Login Page
+       Log In
+       Add Product To Cart    sauce-labs-bike-light
+       Element Should Show Text    ${MAIN_CART_BADGE}    1
+{%- else %}
+       ${login}    Read Credentials Of Environment    test
+       Credentials Should Be Complete    ${login}
+{%- endif %}
+   ```
+
+5. **Check and run:**
+
+   ```bash
+   uv run robocop format
+   uv run robocop check
+   uv run robotcode robot -t "Name Describes The Expected Behaviour"
+   ```
+
+Good test cases have a name that describes the expected behaviour, are independent of each other, never wait
+with `Sleep` and carry tags (e.g. `smoke` for quick core tests). The skill `robot-write-test` helps a coding
+assistant to suggest test cases in exactly this style (see [Coding assistants](#coding-assistants-agent-skills)).
+
+## Coding assistants (Agent Skills)
+
+The folder `.agents/skills/` contains three **Agent Skills** - instructions in the open
+[Agent Skills](https://agentskills.io/) format that a coding assistant loads when needed. They only contain
+the project structure, rules, existing building blocks and links to public documentation, **no internal or
+personal data**.
+
+| Skill | Used for |
+|-------|----------|
+| `robot-project` | structure, installed libraries, commands and rules of this project |
+| `robot-write-test` | business test idea → keyword-driven Robot Framework test with the existing tasks and assertions |
+| `robot-explain-results` | run tests, explain results and error messages in plain words |
+
+**How to use them:**
+
+1. Open the project folder in a coding assistant that supports Agent Skills. Many tools find
+   `.agents/skills/` automatically.
+2. If your tool expects a different folder (e.g. `.github/skills/` or a folder in your home directory), copy
+   the three skill folders there. Every folder contains a `SKILL.md`.
+3. Just ask - the assistant picks the matching skill by its description, e.g.
+   "Write a test: login with a wrong password shows an error message" or
+   "Why did the test *Product Lands In The Cart* fail?". Many tools also allow calling a skill by name, e.g.
+   `/robot-write-test`.
+4. **In a web chat without file access** (e.g. a company chat assistant in the browser):
+   - Open `.agents/skills/<skill>/SKILL.md` in this project and copy the **whole** content.
+   - Paste it as custom instructions / system prompt / project knowledge if the chat offers that, otherwise as
+     the first message with "Use these instructions for this conversation." For general help paste all three.
+   - Ask your question or paste a failure message from `results/log.html`.
+   - If the assistant asks for a file, paste just that file. It answers with complete blocks per file path -
+     copy them into the project and run the commands it names.
+   - Never paste credentials or real personal data. After adding keywords or libraries, paste the skills again.
+
+   Every skill is self-contained - structure, rules and existing keywords are in the text.
+
+The skills are written so that the assistant asks as little as possible: it looks up missing information in
+the project, makes sensible assumptions and states them. You can add your own, non-confidential notes (e.g.
+names of test environments) to `.agents/skills/robot-project/SKILL.md`.
+
+## Adding more libraries
+
+Libraries that were not chosen at creation can be added at any time. Matching libraries can be found at
+[MarketSquare](https://github.com/MarketSquare), the GitHub organisation of the Robot Framework community
+(e.g. Browser Library, RequestsLibrary, DatabaseLibrary), and in the overview at
+<https://robotframework.org/#resources>.
+{%- if own_library_areas %}
+{%- set area_names = {'web': 'web', 'api': 'API', 'database': 'database'} %}
+
+> **Own library planned:** at creation, a different or own library was chosen for
+> {% for area in own_library_areas %}**{{ area_names[area] }}**{{ ', ' if not loop.last }}{% endfor %}.
+> There are no example files for it yet - add it following the steps below.
+{%- endif %}
+
+They are added following the same pattern:
+
+1. Install the package: `uv add <package>`. Package names differ from library to library - many start with
+   `robotframework-` (e.g. `robotframework-sshlibrary`), others do not (e.g. `RESTinstance`). The exact name
+   is on [PyPI](https://pypi.org/) or in the documentation of the library. uv chooses a version that matches
+   Robot Framework {{ rf_version }} and enters it in `pyproject.toml` and `uv.lock`.
+2. Create an ability: `resources/abilities/<name>_ability.resource` with
+   `Resource    ${EXECDIR}/resources/main.resource`, the `Library` line and the settings it needs.
+3. Create interactions: `resources/interactions/<name>_interactions.resource` with
+   `Keyword Tags    interaction` - wrap the keywords of the library into small helper steps here.
+4. Add tasks and assertions, then write a first test.
+5. Check: `uv run robotcode -p check robot` and `uv run robocop check`.
+6. Add the library with its documentation link to `.agents/skills/robot-project/SKILL.md` (table
+   "Installed libraries") so that coding assistants know it.
+
+## Notes on the libraries
+
+**Basics** - `tests/core/` shows how credentials are read per environment and passwords are hidden in the log
+with the CryptoLibrary.
+{%- if include_web or include_accessibility %}
+
+### Web{% if include_web %} ({{ 'Browser Library' if web_library == 'browser' else 'SeleniumLibrary' }}){% endif %}
+
+The examples use the demo shop [saucedemo.com](https://www.saucedemo.com): log in, add a product to the cart,
+log out. The page objects live in `resources/pages/`: `login_page`, `main_page` (product overview),
+`cart_page` (cart) and `settings_page` (menu). New pages get their own file, e.g. `profile_page.resource`.
+
+Selectors from stable to fragile: **ID** (`id=login-button`) → **test attribute** (`css=[data-test="title"]`)
+→ role or text → CSS classes → XPath only as a last resort. Find them with the developer tools of the browser
+(F12 → right click → *Inspect*).
+{%- if include_web and web_library == 'selenium' %}
+The SeleniumLibrary does not wait automatically - so the interactions wait before they click or read.
+It uses Google Chrome; Selenium downloads the matching driver itself.
+{%- else %}
+The Browser Library waits automatically until an element is ready.
+{%- endif %}
+{%- if include_accessibility and include_web and web_library == 'browser' %}
+Web tests and accessibility share the Browser Library - it is imported only once
+(`resources/abilities/browser_ability.resource`).
+{%- endif %}
+{%- endif %}
+{%- if include_api %}
+
+### API ({{ 'RequestsLibrary' if api_library == 'requests' else 'RESTinstance' }})
+
+The example uses the open test API [jsonplaceholder.typicode.com](https://jsonplaceholder.typicode.com/)
+(no login). The address per environment is in `main.resource` (`URLS`), the endpoints in
+`resources/abilities/api_ability.resource`. Every request returns a dictionary with `status` and `body`,
+no matter which library works underneath.
+{%- endif %}
+{%- if include_database %}
+
+### Database (DatabaseLibrary)
+
+The examples create customers in an in-memory SQLite database - no server needed. Its connection data is in
+`resources/abilities/database_ability.resource` (`EXAMPLE_DB_…`).
+{%- if database_driver != 'sqlite' %}
+The driver for your own {{ 'PostgreSQL' if database_driver == 'postgresql' else 'MySQL/MariaDB' }} database is installed. Server, port and database name are in
+the same file (`DB_…`), user and password in `main.resource` (`LOGINS`). The connection test runs with
+`uv run robotcode -p database robot`.
+{%- else %}
+For a database server, add the driver: `uv add psycopg2-binary` (PostgreSQL) or `uv add pymysql`
+(MySQL/MariaDB), then enter the connection data in the ability.
+{%- endif %}
+{%- endif %}
+{%- if include_desktop %}
+
+### Desktop (PlatynUI)
+
+The example calculates in the Windows calculator. Windows and elements are Python classes in the page object
+`resources/pages/calculator_page.py`. Find the details of new elements with `uv run PlatynUI.Spy`. Window names
+depend on the Windows language ("Calculator", "Rechner" ...). PlatynUI is still in development.
+{%- endif %}
+{%- if include_mobile %}
+
+### Mobile (AppiumLibrary)
+
+Requires a running [Appium server](https://appium.io/docs/en/latest/quickstart/) and an Android device or
+emulator. Selectors are in `resources/pages/android_settings_page.resource` (order: `accessibility_id=…`,
+`id=…`, `android=new UiSelector()…`). Find them with the
+[Appium Inspector](https://github.com/appium/appium-inspector).
+{%- endif %}
+{%- if include_faker %}
+
+### Test data (FakerLibrary)
+
+Generates fake but realistic data. Language and country are set in
+`resources/abilities/faker_ability.resource` (`${FAKER_LOCALE}`, default `en_US`).
+{%- endif %}
+{%- if include_email %}
+
+### E-mail (ImapLibrary2)
+
+Waits for e-mails in an IMAP mailbox and checks text and links. Server and port are in
+`resources/abilities/email_ability.resource`, user and password in `main.resource`.
+The example test runs with `uv run robotcode -p email robot` once a mailbox is entered.
+{%- endif %}
+{%- if include_doctest %}
+
+### Images and PDFs (DocTestLibrary)
+
+Compares images and PDFs with reference files in `data/reference/` and shows differences in the log.
+A new reference image changes what counts as "correct" - only replace it on purpose.
+{%- endif %}
+{%- if include_sap %}
+
+### SAP (RoboSAPiens)
+
+Operates SAP GUI via visible labels, e.g. `Fill Text Field    Material    4711`.
+Runs only on Windows with an open and logged-in SAP GUI. Window titles depend on the SAP GUI language.
+{%- endif %}
+{%- if include_accessibility %}
+
+### Accessibility (axe-core)
+
+Uses the Browser Library (installed for it, but imported only once).
+
+- `tests/accessibility/without_login.robot` - **data-driven**: every row is a public page.
+- `tests/accessibility/with_login.robot` - logs in and checks pages behind it (product overview, cart). The
+  login uses the page objects and the credentials from `main.resource`.
+
+An HTML report is written for every page to `results/accessibility/`. Which impacts make a test fail is set
+in `resources/abilities/browser_ability.resource` (`A11Y_BLOCKING_IMPACTS`). Automated checks find only part
+of the problems and do not replace a manual review.
+{%- endif %}
+{%- if include_gitlab_ci %}
+
+## GitLab CI
+
+The pipeline in `.gitlab-ci.yml` uses the same profiles as locally:
+
+| Job | Command | When |
+|-----|---------|------|
+| `check` | Robocop and `robotcode -p ci -p check robot` | on every push |
+| `test` | `robotcode -p ci robot` | on every push |
+| `test-environment` | `robotcode -p ci -p $RF_ENV -p smoke robot` | scheduled, when `RF_ENV` is set |
+| `template-check` | compares the project with the branch `rf-{{ rf_version }}` of the template | on the default branch; yellow (hint only) when there is something new - see [Updating from the template](#updating-from-the-template) |
+
+**Image:** the default is [`ppodgorsek/robot-framework`](https://hub.docker.com/r/ppodgorsek/robot-framework) -
+it ships browsers, drivers and Node.js. The pipeline installs `uv` in it and uses the project environment
+from `uv.lock`, so that the same versions run locally and in CI. Alternatives are listed as comments in
+`.gitlab-ci.yml` (e.g. a slim `uv` image for API and database tests).
+
+For scheduled runs, set the variable `RF_ENV` (e.g. `test`) under *Build → Pipeline schedules*. Store the
+private CryptoLibrary key as a protected variable.
+{%- endif %}
+{%- if include_github_ci %}
+
+## GitHub Actions
+
+The workflow in `.github/workflows/robot.yml` uses the same profiles as locally:
+
+| Job | Command | When |
+|-----|---------|------|
+| `check` | Robocop and `robotcode -p ci -p check robot` | on every push and pull request |
+| `test` | `robotcode -p ci -p dev robot` | after `check`; started by hand with a selectable environment |
+| `template-check` | compares the project with the branch `rf-{{ rf_version }}` of the template | on the default branch; warning (hint only) when there is something new - see [Updating from the template](#updating-from-the-template) |
+
+Against another environment: choose `test` or `prod` under *Actions > Robot Framework > Run workflow*. The
+results (`results/`) are attached to the run as artifact `results`. Store the private CryptoLibrary key as a
+*repository secret*.
+{%- endif %}
+
+## Common errors
+
+| Message | Meaning | What to do |
+|---------|---------|------------|
+| `No keyword with name '…' found` | keyword unknown | check the spelling; is a `Resource` import missing? |
+| `Resource file '…' does not exist` | wrong path | always start tests in the project folder (`${EXECDIR}`) |
+| `Element … not found` / timeout | element not found | check the selector in the page object{% if include_web or include_accessibility %}, watch with `-p headed`{% endif %} |
+| `Variable '${…}' not found` | variable not defined | create it in `main.resource`, the ability or the page |
+| `Connection refused` | service not reachable | check environment, proxy and VPN |
+| Tests pass locally but not in CI | different settings | reproduce locally with `-p ci` |
+
+## Glossary
+
+| Term | Meaning |
+|------|---------|
+| **Keyword** | reusable step. Comes from a library or is written by yourself. |
+| **Keyword-driven** | test cases are sequences of keywords with arguments |
+| **Library** | collection of ready-made keywords, e.g. for browsers or databases |
+| **Ability** | imports a library and holds its settings |
+| **Page object** | file with the selectors of one page |
+| **Interaction** | technical helper step that uses the library (tag `interaction`, not used in tests) |
+| **Task** | action used in a test |
+| **Assertion** | check used in a test |
+| **Selector (locator)** | description of how an element is found |
+| **Setup / teardown** | steps before or after a test, e.g. start and close the browser |
+| **Profile** | named execution setting in `robot.toml` |
+| **Tag** | label on tests or keywords to select or mark them |
+
+## Learning and reference
+
+| Topic | Link |
+|-------|------|
+| Robot Framework User Guide | <https://robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html> |
+| Community docs with tutorials | <https://docs.robotframework.org/> |
+| Learning path (RFCP syllabus) | <https://robotframework.org/robotframework-RFCP-syllabus/> |
+| Standard libraries | <https://robotframework.org/robotframework/#standard-libraries> |
+| Community libraries (MarketSquare) | <https://github.com/MarketSquare> |
+| RobotCode and `robot.toml` | <https://robotcode.io/> |
+| Robocop | <https://robocop.readthedocs.io/> |
+| uv | <https://docs.astral.sh/uv/> |
+
+## Updating from the template
+
+This project was generated from a template. **Where** it comes from is stored in `.copier-answers.yml`:
+`_src_path` is the address of the template, `_commit` the version the project was created or last updated
+from. Improvements of the template do **not** arrive automatically - you pull them yourself.
+
+The template has one version per Robot Framework version (branch `rf-<version>`). This project uses Robot
+Framework **{{ rf_version }}**. Always pass `--vcs-ref` when updating - without it, Copier takes the newest
+template version and raises the Robot Framework version, too:
+
+```bash
+git status                                                  # everything committed? copier update needs a clean state
+uvx copier update --trust --vcs-ref rf-{{ rf_version }}     # take over improvements, version stays {{ rf_version }}
+git diff                                                    # look at the changes
+uv sync                                                     # install packages matching the new pyproject.toml
+uv run robotcode robot                                      # test, then commit
+```
+
+Copier only applies the **differences** between the old and the new template version. Your own tests and
+keywords are kept. Where you and the template changed the same place, you get a conflict like in Git
+(markers `<<<<<<<` / `>>>>>>>` in the file) - resolve it, then commit. If the address of the template changed,
+adjust the line `_src_path` in `.copier-answers.yml`.
+
+### Newer versions of the libraries
+
+Apart from Robot Framework, the libraries have no fixed version; `uv.lock` holds the state the project was
+set up with. This is how you see what is new and take it over:
+
+```bash
+uv tree --outdated --depth 1     # shows the newest available version per library
+uv lock --upgrade                # move to the newest matching versions
+uv sync                          # install
+uv run robotcode robot           # test, then commit
+```
+
+You move to a newer Robot Framework version on purpose with the branch of that version, e.g.
+`uvx copier update --trust --vcs-ref rf-<new-version>`. The available versions are listed in the template's
+documentation (`docs/versions-and-updates.md`).

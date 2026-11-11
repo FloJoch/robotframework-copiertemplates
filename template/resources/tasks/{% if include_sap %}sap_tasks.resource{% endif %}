@@ -1,0 +1,18 @@
+*** Settings ***
+Documentation       Business actions in SAP - these keywords are used in tests.
+Resource            ${EXECDIR}/resources/interactions/sap_interactions.resource
+
+
+*** Keywords ***
+Attach To SAP
+    [Documentation]    Connects to the open SAP GUI.
+    Connect To Sap Client
+
+Open Transaction
+    [Documentation]    Opens a transaction, e.g. "SU3" (own user data).
+    [Arguments]    ${code}
+    Run Transaction Code    ${code}
+
+Detach From SAP
+    [Documentation]    Ends the connection to SAP.
+    Close Sap Client

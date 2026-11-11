@@ -1,0 +1,95 @@
+# robot.toml - the single source of execution options.
+# Docs: https://robotcode.io/03_reference/config  (profiles: combine several with -p)
+# Always run via: uv run robotcode [-p <profile> ...] robot [file or folder]
+output-dir = "results"
+paths = ["tests"]
+python-path = ["."]
+default-profiles = ["dev"]
+# Passes cleanly even when all tests of a run are excluded
+run-empty-suite = true
+{%- set excluded = [] %}
+{%- if include_mobile %}{% set _ = excluded.append('requires-device') %}{% endif %}
+{%- if include_desktop %}{% set _ = excluded.append('requires-desktop') %}{% endif %}
+{%- if include_email %}{% set _ = excluded.append('requires-mailbox') %}{% endif %}
+{%- if include_database and database_driver != 'sqlite' %}{% set _ = excluded.append('requires-database') %}{% endif %}
+{%- if include_sap %}{% set _ = excluded.append('requires-sap') %}{% endif %}
+{%- if excluded %}
+# Tests that need a device, a program, a mailbox or a server
+# only run with their own profile (see below).
+excludes = [{% for t in excluded %}"{{ t }}"{% if not loop.last %}, {% endif %}{% endfor %}]
+{%- endif %}
+
+[profiles.dev]
+description = "Environment dev (default)"
+variables = { ENV = "dev" }
+
+[profiles.test]
+description = "Environment test"
+variables = { ENV = "test" }
+
+[profiles.prod]
+description = "Environment prod - read-only tests"
+variables = { ENV = "prod" }
+
+[profiles.smoke]
+description = "Only quick core tests (tags smoke and hello-world)"
+includes = ["smoke", "hello-world"]
+
+# Only check syntax and imports - also of otherwise excluded tests
+[profiles.check]
+description = "Only check syntax and imports, run nothing"
+dry-run = true
+excludes = []
+{%- if include_web or include_accessibility %}
+
+# Browser with a visible window and a pause after every action (value in main.resource: BROWSER_SPEED)
+[profiles.headed]
+description = "Visible and slower browser - to watch"
+variables = { HEADLESS = "False", BROWSER_SPEED = "0.5s" }
+{%- endif %}
+{%- if include_mobile %}
+
+# Only mobile tests (Appium server and Android device or emulator needed)
+[profiles.mobile]
+description = "Only mobile tests (Appium server and device needed)"
+excludes = []
+includes = ["requires-device"]
+{%- endif %}
+{%- if include_desktop %}
+
+# Only desktop tests (Windows needed)
+[profiles.desktop]
+description = "Only desktop tests (Windows)"
+excludes = []
+includes = ["requires-desktop"]
+{%- endif %}
+{%- if include_email %}
+
+# Only e-mail tests (mailbox access in resources/abilities/email_ability.resource needed)
+[profiles.email]
+description = "Only e-mail tests (mailbox needed)"
+excludes = []
+includes = ["requires-mailbox"]
+{%- endif %}
+{%- if include_database and database_driver != 'sqlite' %}
+
+# Only tests against your own database (access in resources/abilities/database_ability.resource)
+[profiles.database]
+description = "Only tests against your own database"
+excludes = []
+includes = ["requires-database"]
+{%- endif %}
+{%- if include_sap %}
+
+# Only SAP tests (Windows with a logged-in SAP GUI needed)
+[profiles.sap]
+description = "Only SAP tests (SAP GUI needed)"
+excludes = []
+includes = ["requires-sap"]
+{%- endif %}
+
+# For CI pipelines (GitLab CI, GitHub Actions): sets ${CI} and writes a JUnit report
+[profiles.ci]
+description = "For CI pipelines: no window, JUnit report"
+variables = { CI = "True" }
+xunit = "xunit.xml"

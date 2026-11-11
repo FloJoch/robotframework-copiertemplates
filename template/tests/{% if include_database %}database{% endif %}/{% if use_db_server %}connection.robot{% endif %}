@@ -1,0 +1,14 @@
+*** Settings ***
+Documentation       Checks the connection to your own database. Runs only with the profile "database":
+...                 uv run robotcode -p database robot
+Resource            ${EXECDIR}/resources/tasks/database_tasks.resource
+Resource            ${EXECDIR}/resources/assertions/database_assertions.resource
+Test Setup          Use Own Database
+Test Teardown       Close Database
+Test Tags           database    requires-database
+
+
+*** Test Cases ***
+Own Database Responds
+    [Documentation]    Your own database is reachable and answers a simple query.
+    Database Should Respond

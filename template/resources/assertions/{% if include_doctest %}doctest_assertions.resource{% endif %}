@@ -1,0 +1,22 @@
+*** Settings ***
+Documentation       Generic checks of images and PDFs - these keywords are used in tests.
+Resource            ${EXECDIR}/resources/interactions/doctest_interactions.resource
+
+
+*** Keywords ***
+Image Should Match Reference
+    [Documentation]    Checks that the image looks like the reference file from data/reference.
+    [Arguments]    ${image}    ${reference_file}
+    ${reference}    Reference File    ${reference_file}
+    Compare Two Images    ${reference}    ${image}
+
+PDF Should Match Reference
+    [Documentation]    Checks that the PDF looks like the reference file from data/reference.
+    [Arguments]    ${pdf}    ${reference_file}
+    ${reference}    Reference File    ${reference_file}
+    Compare Two Pdfs    ${reference}    ${pdf}
+
+PDF Should Include Texts
+    [Documentation]    Checks that all given texts are in the PDF.
+    [Arguments]    ${pdf}    @{texts}
+    Check Texts In Pdf    ${pdf}    @{texts}

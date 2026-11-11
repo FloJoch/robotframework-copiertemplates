@@ -1,0 +1,5 @@
+# Consistent line endings (LF) - then "copier update" shows conflicts only on lines that really changed
+* text=auto eol=lf
+*.bat text eol=crlf
+*.png binary
+*.pdf binary

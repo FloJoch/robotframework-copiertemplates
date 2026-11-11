@@ -1,0 +1,31 @@
+*** Settings ***
+Documentation       Technical helper keywords to generate test data. Only here are keywords of the FakerLibrary used.
+Resource            ${EXECDIR}/resources/abilities/faker_ability.resource
+Keyword Tags        interaction
+
+
+*** Keywords ***
+Generate Full Name
+    [Documentation]    Generates a fake full name.
+    ${value}    Name
+    RETURN    ${value}
+
+Generate Email Address
+    [Documentation]    Generates a fake e-mail address.
+    ${value}    Email
+    RETURN    ${value}
+
+Generate Street
+    [Documentation]    Generates a fake street with house number.
+    ${value}    Street Address
+    RETURN    ${value}
+
+Generate City
+    [Documentation]    Generates a city name.
+    ${value}    City
+    RETURN    ${value}
+
+Generate Birth Date
+    [Documentation]    Generates a date of birth of an adult.
+    ${value}    Date Of Birth    minimum_age=18    maximum_age=90
+    RETURN    ${value}

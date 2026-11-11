@@ -1,0 +1,43 @@
+*** Settings ***
+Documentation       Business actions for the accessibility checks - these keywords are used in tests.
+Resource            ${EXECDIR}/resources/interactions/browser_interactions.resource
+Resource            ${EXECDIR}/resources/interactions/accessibility_interactions.resource
+
+
+*** Keywords ***
+Start Audit Browser
+    [Documentation]    Starts the browser for the checks.
+    Launch Browser
+
+Stop Audit Browser
+    [Documentation]    Closes the browser.
+    Close All Web Browsers
+
+Audit Accessibility Of Page
+    [Documentation]    Opens a page, checks it with axe-core, automatically writes an HTML report to
+    ...    results/accessibility/ (linked in the log) and returns the violations found.
+    [Arguments]    ${address}
+    Go To Address    ${address}
+    ${violations}    Audit Accessibility Of Current Page
+    RETURN    ${violations}
+
+Audit Accessibility Of Current Page
+    [Documentation]    Checks the page that is open right now (e.g. after login) and writes the report.
+    ${address}    Read Current Address
+    ${violations}    Find Accessibility Violations
+    ${report}    Write Accessibility Report    ${address}    ${violations}
+    Log    <a href="${report}">Accessibility report for ${address}</a>    html=True
+    RETURN    ${violations}
+
+Log In For Audit
+    [Documentation]    Logs in with the credentials of the active environment (login page from login_page).
+    Go To Address    ${WEB_BASE_URL}
+    Fill Field    ${LOGIN_USERNAME_FIELD}    ${LOGINS}[${ENV}][username]
+    Fill Secret Field    ${LOGIN_PASSWORD_FIELD}    ${LOGINS}[${ENV}][password]
+    Click On    ${LOGIN_BUTTON}
+    Wait For Visible Element    ${MAIN_TITLE}
+
+Open Cart For Audit
+    [Documentation]    Opens the cart so that it can be checked.
+    Click On    ${MAIN_CART_LINK}
+    Wait For Visible Element    ${CART_TITLE}

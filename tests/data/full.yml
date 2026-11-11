@@ -1,0 +1,7 @@
+language: en
+project_name: "Full Test Project"
+test_areas: [web, api, email, database, faker, doctest, accessibility, desktop, mobile, sap]
+web_library: browser
+api_library: requests
+database_driver: postgresql
+ci_provider: gitlab

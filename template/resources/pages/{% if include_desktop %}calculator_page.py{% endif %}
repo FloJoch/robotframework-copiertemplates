@@ -1,0 +1,18 @@
+"""Page object "calculator" for PlatynUI: window and elements of the Windows calculator.
+
+Every class describes a window, every property an element in it. Find the values for
+locator(...) with the tool: uv run PlatynUI.Spy
+"""
+
+from PlatynUI.ui import Text, Window, locator
+
+
+# The window name depends on the Windows language: "Calculator" (English), "Rechner" (German) ...
+@locator(name="Calculator")
+class CalculatorWindow(Window):
+    @property
+    @locator(AutomationId="CalculatorResults")
+    def result(self) -> Text: ...
+
+
+calculator = CalculatorWindow()

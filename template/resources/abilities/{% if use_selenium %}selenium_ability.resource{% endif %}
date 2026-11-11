@@ -1,0 +1,10 @@
+*** Settings ***
+Documentation       Ability "work in the browser" with the SeleniumLibrary. No keywords - they live in
+...                 interactions/selenium_interactions.resource.
+Resource            ${EXECDIR}/resources/main.resource
+Library             SeleniumLibrary    timeout=${TIMEOUT}    run_on_failure=Capture Page Screenshot
+
+
+*** Variables ***
+# Start address of the web application in the active environment (values in main.resource, URLS)
+${WEB_BASE_URL}     ${URLS}[${ENV}][web]

@@ -1,0 +1,5 @@
+*** Settings ***
+Documentation       Ability "work in SAP": imports RoboSAPiens. Windows with SAP GUI only.
+...                 No keywords - they live in interactions/.
+Resource            ${EXECDIR}/resources/main.resource
+Library             RoboSAPiens

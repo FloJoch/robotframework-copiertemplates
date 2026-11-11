@@ -1,0 +1,11 @@
+*** Settings ***
+Documentation       Generic checks in desktop programs - these keywords are used in tests.
+Resource            ${EXECDIR}/resources/interactions/desktop_interactions.resource
+
+
+*** Keywords ***
+Program Element Should Show Text
+    [Documentation]    Checks that the label of an element includes the expected text.
+    [Arguments]    ${element}    ${expected}
+    ${text}    Read Element Name    ${element}
+    Should Contain    ${text}    ${expected}

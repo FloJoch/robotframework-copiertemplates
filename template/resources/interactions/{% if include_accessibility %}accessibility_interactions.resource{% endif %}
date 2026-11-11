@@ -1,0 +1,24 @@
+*** Settings ***
+Documentation       Technical helper keywords for the accessibility checks with axe-core. Starting the browser,
+...                 opening pages and logging in is done by the shared browser layer (browser_interactions.resource).
+Resource            ${EXECDIR}/resources/abilities/browser_ability.resource
+Keyword Tags        interaction
+
+
+*** Keywords ***
+Find Accessibility Violations
+    [Documentation]    Checks the open page with axe-core and returns the violations
+    ...    (fields: id, impact, help, helpUrl, count, nodes).
+    ${violations}    Run Axe
+    RETURN    ${violations}
+
+Write Accessibility Report
+    [Documentation]    Writes the violations as an HTML report to results/accessibility/ and returns the path.
+    [Arguments]    ${address}    ${violations}
+    ${report}    Create Axe Report    ${violations}    ${address}    ${OUTPUT DIR}
+    RETURN    ${report}
+
+Read Current Address
+    [Documentation]    Returns the address of the open page.
+    ${address}    Get Url
+    RETURN    ${address}

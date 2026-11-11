@@ -1,0 +1,146 @@
+---
+name: robot-project
+description: >-
+  Structure, installed libraries, rules and commands of the Robot Framework project "{{ project_name }}".
+  Use for every question about the project: where something lives, how the layers work together, which
+  library is used for what, how to run tests, store credentials or add a library. Works in the IDE and when
+  pasted into a chat.
+---
+
+# Robot Framework project {{ project_name }}
+
+You support a team doing automated testing with **Robot Framework {{ rf_version }}**. Many people on the team
+come from the **business side** and cannot program.
+
+- Use short, plain sentences. Explain technical terms the first time they appear. Answer in the language the
+  person writes in.
+- Related skills, if available: `robot-write-test` (new tests), `robot-explain-results` (run tests, explain
+  failures). Without them, this text is enough for questions about the project.
+
+## How to work - in the IDE or in a chat
+
+This text works in two settings:
+
+- **With access to the project** (coding assistant in the IDE): read what you need yourself - files in
+  `resources/`, `tests/`, `robot.toml`, `.copier-answers.yml` - and run the commands below if you can.
+- **In a chat without file access** (this text was pasted as an instruction): everything about structure,
+  libraries, building blocks and rules is in this text - rely on it. Only if you need the exact content of one
+  file (e.g. a page object or an error message), ask the person to paste exactly that part and name the file.
+  Give results as complete, copyable blocks, each headed with its file path (e.g.
+  `resources/tasks/web_tasks.resource`), and list the commands the person should run.
+
+In both settings: **ask as little as possible.** Only ask when an answer would be wrong without the
+information - then one focused question, not several. Make sensible assumptions and state them.
+
+## Installed libraries
+
+Only these libraries are installed. Use only their keywords and documentation. Never invent keywords.
+If an area is missing, suggest adding the library (README, "Adding more libraries") instead of writing code
+for a library that is not installed.
+{%- if own_library_areas %}
+{%- set area_names = {'web': 'web', 'api': 'API', 'database': 'database'} %}
+
+For {% for area in own_library_areas %}**{{ area_names[area] }}**{{ ', ' if not loop.last }}{% endfor %} a **different or own library** was chosen
+when the project was created. Check `pyproject.toml` and `resources/abilities/` to see whether it is set up
+already. If not, help to add it following the README (install the package with `uv add <package>`, ability,
+interactions, then tasks and assertions) and use the documentation of that library.
+{%- endif %}
+
+| Area | Library | Documentation |
+|------|---------|---------------|
+| Basics | Robot Framework {{ rf_version }}, standard libraries | <https://robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html> |
+| Passwords | CryptoLibrary | <https://github.com/Snooz82/robotframework-crypto> |
+{%- if include_web and web_library == 'browser' %}
+| Web | Browser Library (Playwright) | <https://marketsquare.github.io/robotframework-browser/Browser.html> |
+{%- elif include_web %}
+| Web | SeleniumLibrary | <https://robotframework.org/SeleniumLibrary/SeleniumLibrary.html> |
+{%- endif %}
+{%- if include_api and api_library == 'requests' %}
+| API | RequestsLibrary | <https://marketsquare.github.io/robotframework-requests/doc/RequestsLibrary.html> |
+{%- elif include_api %}
+| API | RESTinstance | <https://asyrjasalo.github.io/RESTinstance/> |
+{%- endif %}
+{%- if include_database %}
+| Database | DatabaseLibrary{% if database_driver == 'postgresql' %} with PostgreSQL{% elif database_driver == 'mysql' %} with MySQL/MariaDB{% else %} with SQLite{% endif %} | <https://marketsquare.github.io/Robotframework-Database-Library/> |
+{%- endif %}
+{%- if include_desktop %}
+| Desktop | PlatynUI | <https://github.com/imbus/robotframework-PlatynUI> |
+{%- endif %}
+{%- if include_mobile %}
+| Mobile | AppiumLibrary | <https://serhatbolsu.github.io/robotframework-appiumlibrary/AppiumLibrary.html> |
+{%- endif %}
+{%- if include_faker %}
+| Test data | FakerLibrary | <https://guykisel.github.io/robotframework-faker/> |
+{%- endif %}
+{%- if include_email %}
+| E-mail | ImapLibrary2 | <https://github.com/lasselindqvist/robotframework-imaplibrary2> |
+{%- endif %}
+{%- if include_doctest %}
+| PDF and images | DocTestLibrary | <https://github.com/manykarim/robotframework-doctestlibrary> |
+{%- endif %}
+{%- if include_sap %}
+| SAP | RoboSAPiens | <https://github.com/imbus/robotframework-robosapiens> |
+{%- endif %}
+{%- if include_accessibility %}
+| Accessibility | axe-core with Browser Library | <https://dequeuniversity.com/rules/axe/> |
+{%- endif %}
+
+More basics: Robot Framework learning path <https://robotframework.org/robotframework-RFCP-syllabus/>,
+standard libraries <https://robotframework.org/robotframework/#standard-libraries>, community libraries
+(MarketSquare) <https://github.com/MarketSquare>.
+
+## Project structure (Screenplay pattern)
+
+```text
+tests/<area>/              test cases - only tasks and assertions
+resources/tasks/           business actions (keywords with meaningful names and arguments)
+resources/assertions/      business checks
+resources/interactions/    technical helper keywords - the only place with library keywords (tag "interaction")
+resources/pages/           page objects: selectors per page, names PAGE_ELEMENT
+resources/abilities/       per library: library import and settings, no keywords
+resources/main.resource    standard libraries, CryptoLibrary, addresses and credentials per environment
+robot.toml                 profiles for running the tests
+```
+
+Every layer only uses the layer below. Tasks **act**, assertions **check** - never mix them. Keywords in
+`resources/interactions/` carry the tag `interaction` (`Keyword Tags` in the file) and are never used
+directly in tests. All imports start with `${EXECDIR}/` (project folder), never `../` or `${CURDIR}`.
+
+## Commands
+
+| Purpose | Command |
+|---------|---------|
+| All tests (environment dev) | `uv run robotcode robot` |
+| Against another environment | `uv run robotcode -p test robot` |
+| Only core tests | `uv run robotcode -p test -p smoke robot` |
+| Only check syntax | `uv run robotcode -p check robot` |
+| Format and check files | `uv run robocop format`, `uv run robocop check` |
+| Encrypt a password | `uv run CryptoLibrary` |
+{%- if include_web or include_accessibility %}
+| Visible and slower browser | `uv run robotcode -p headed robot` |
+{%- endif %}
+{%- if include_desktop %}
+| Desktop tests | `uv run robotcode -p desktop robot` |
+{%- endif %}
+{%- if include_mobile %}
+| Mobile tests | `uv run robotcode -p mobile robot` |
+{%- endif %}
+{%- if include_email %}
+| E-mail tests | `uv run robotcode -p email robot` |
+{%- endif %}
+{%- if include_database and database_driver != 'sqlite' %}
+| Own database | `uv run robotcode -p database robot` |
+{%- endif %}
+{%- if include_sap %}
+| SAP tests | `uv run robotcode -p sap robot` |
+{%- endif %}
+
+Execution options live only in `robot.toml` (profiles) - never pass them to `robot` directly.
+
+## What you never do
+
+- Ask for passwords, tokens or real personal data, or write them into code.
+  Passwords are encrypted with `uv run CryptoLibrary` and only stored as `crypt:…`.
+- Weaken tests to make them pass. A bug in the application is a finding, not a test problem.
+- Change settings in `resources/main.resource`, `robot.toml` or `pyproject.toml` without pointing it out.
+- Change data in the environment `prod`.

@@ -1,0 +1,62 @@
+*** Settings ***
+Documentation       Main file - foundation for all abilities.
+...                 It holds the standard libraries, the CryptoLibrary, the addresses and credentials
+...                 per environment and the global settings. Choose the environment when starting with
+...                 the profile: uv run robotcode -p test robot (dev is the default).
+Library             Collections
+Library             DateTime
+Library             OperatingSystem
+Library             Process
+Library             String
+Library             CryptoLibrary
+...                 variable_decryption=True
+...                 key_path=${EXECDIR}/data/keys
+
+
+*** Variables ***
+# ---------- Global settings
+# Active environment: dev, test or prod (the profile in robot.toml sets the value)
+${ENV}                  dev
+# Running in a CI pipeline (GitLab or GitHub)? The profile "ci" sets True.
+${CI}                   False
+# Maximum time libraries wait for elements and responses
+${TIMEOUT}              10s
+{%- if include_web or include_accessibility %}
+# Browser: {{ 'chrome, firefox or edge (SeleniumLibrary)' if include_web and web_library == 'selenium' else 'chromium, firefox or webkit (Browser Library)' }}
+${BROWSER}              {{ 'chrome' if include_web and web_library == 'selenium' else 'chromium' }}
+# Browser without a visible window (True) or with a window (False)
+${HEADLESS}             True
+# Pause after every browser action, e.g. 0.5s to watch (0s = full speed)
+${BROWSER_SPEED}        0s
+# Browser window size in pixels
+${SCREEN_WIDTH}         ${1920}
+${SCREEN_HEIGHT}        ${1080}
+{%- endif %}
+
+# ---------- Addresses per environment
+# Read with ${URLS}[${ENV}][name], e.g. ${URLS}[${ENV}][web].
+{%- for env in ['DEV', 'TEST', 'PROD'] %}
+&{URLS_{{ env }}}{{ ' ' * (16 - env | length) }}&{EMPTY}
+{%- if include_web or include_accessibility %}
+...                     web=https://www.saucedemo.com
+{%- endif %}
+{%- if include_api %}
+...                     api=https://jsonplaceholder.typicode.com
+{%- endif %}
+{%- endfor %}
+&{URLS}                 dev=${URLS_DEV}    test=${URLS_TEST}    prod=${URLS_PROD}
+
+# ---------- Credentials per environment
+# Read with ${LOGINS}[${ENV}][username] and ${LOGINS}[${ENV}][password].
+# Never store your own passwords in plain text: encrypt them with "uv run CryptoLibrary" and enter "crypt:...".
+{%- if include_web or include_accessibility %}
+# The values below are the public demo credentials of saucedemo.com (shown on its login page).
+{%- for env in ['DEV', 'TEST', 'PROD'] %}
+&{LOGIN_{{ env }}}{{ ' ' * (15 - env | length) }}username=standard_user    password=secret_sauce
+{%- endfor %}
+{%- else %}
+&{LOGIN_DEV}            username=test-user-dev      password=please-encrypt
+&{LOGIN_TEST}           username=test-user-test     password=please-encrypt
+&{LOGIN_PROD}           username=test-user-prod     password=please-encrypt
+{%- endif %}
+&{LOGINS}               dev=${LOGIN_DEV}    test=${LOGIN_TEST}    prod=${LOGIN_PROD}

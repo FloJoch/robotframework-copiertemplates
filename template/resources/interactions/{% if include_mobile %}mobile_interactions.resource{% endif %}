@@ -1,0 +1,36 @@
+*** Settings ***
+Documentation       Technical helper keywords for apps. Only here are keywords of the AppiumLibrary used.
+Resource            ${EXECDIR}/resources/abilities/mobile_ability.resource
+Resource            ${EXECDIR}/resources/pages/android_settings_page.resource
+Keyword Tags        interaction
+
+
+*** Keywords ***
+Launch App
+    [Documentation]    Starts the app on the Android device or emulator.
+    Open Application    ${APPIUM_SERVER_URL}
+    ...    platformName=Android
+    ...    appium:automationName=UiAutomator2
+    ...    appium:appPackage=${ANDROID_APP_PACKAGE}
+    ...    appium:appActivity=${ANDROID_APP_ACTIVITY}
+
+Close Apps
+    [Documentation]    Closes all started apps.
+    Close All Applications
+
+Build Mobile Selector
+    [Documentation]    Puts a text into a selector with the placeholder {text}.
+    [Arguments]    ${template}    ${text}
+    ${selector}    Format String    ${template}    text=${text}
+    RETURN    ${selector}
+
+Tap On
+    [Documentation]    Waits for an element and taps it.
+    [Arguments]    ${selector}
+    Wait Until Element Is Visible    ${selector}
+    Click Element    ${selector}
+
+Wait For Visible Element
+    [Documentation]    Waits until an element is visible.
+    [Arguments]    ${selector}
+    Wait Until Element Is Visible    ${selector}

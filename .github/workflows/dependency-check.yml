@@ -1,0 +1,34 @@
+# Weekly check for new versions of the dependencies that the template controls.
+# Opens an issue (GitHub sends a notification) when a newer version is available.
+name: Dependency check
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"   # every Monday, 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Compare versions with PyPI
+        id: compare
+        run: python3 .github/scripts/check_versions.py >> "$GITHUB_OUTPUT"
+
+      - name: Open issue
+        if: steps.compare.outputs.outdated == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TITLE: ${{ steps.compare.outputs.title }}
+        run: |
+          if gh issue list --state open --search "\"$TITLE\" in:title" --json number --jq '.[].number' | grep -q .; then
+            echo "Issue already open: $TITLE"
+          else
+            gh issue create --title "$TITLE" --body-file update-report.md
+          fi

@@ -1,0 +1,159 @@
+---
+name: robot-write-test
+description: >-
+  Turns a business test idea into a keyword-driven Robot Framework test case for the project
+  "{{ project_name }}" - following the Screenplay pattern and using the existing tasks and assertions. Use
+  when a new test is written, an existing one is extended or a missing keyword has to be added. Works in
+  the IDE and when pasted into a chat.
+---
+
+# Write a test case
+
+You help a team that tests with **Robot Framework {{ rf_version }}**; many of them are business people who
+cannot program. Use short, plain sentences and answer in the language the person writes in. More about the
+project is in the skill `robot-project`, if available - the essentials are repeated here.
+
+## How to work - in the IDE or in a chat
+
+This text works in two settings:
+
+- **With access to the project** (coding assistant in the IDE): read what you need yourself - files in
+  `resources/`, `tests/`, `robot.toml`, `.copier-answers.yml` - and run the commands below if you can.
+- **In a chat without file access** (this text was pasted as an instruction): everything about structure,
+  libraries, building blocks and rules is in this text - rely on it. Only if you need the exact content of one
+  file (e.g. a page object or an error message), ask the person to paste exactly that part and name the file.
+  Give results as complete, copyable blocks, each headed with its file path (e.g.
+  `resources/tasks/web_tasks.resource`), and list the commands the person should run.
+
+In both settings: **ask as little as possible.** Only ask when an answer would be wrong without the
+information - then one focused question, not several. Make sensible assumptions and state them.
+
+## Project structure (Screenplay pattern)
+
+```text
+tests/<area>/              test cases - only tasks and assertions
+resources/tasks/           business actions          <area>_tasks.resource
+resources/assertions/      generic checks            <area>_assertions.resource
+resources/interactions/    technical helpers         <area>_interactions.resource  (Keyword Tags  interaction)
+resources/pages/           selectors per page        <page>_page.resource, names PAGE_ELEMENT
+resources/abilities/       library import + settings <library>_ability.resource, no keywords
+resources/main.resource    standard libraries, CryptoLibrary, URLs and credentials per environment
+```
+
+Every layer only imports the layer below, always with `${EXECDIR}/resources/...`. Tests import only tasks and
+assertions; library keywords only live in interactions.
+
+## Keyword-driven testing
+
+The tests in this project are **keyword-driven**: a test case is a sequence of business keywords with
+arguments - each line is an action (task) or a check (assertion). Example:
+
+```robotframework
+Product Lands In The Cart
+    [Documentation]    A product appears in the cart after adding it.
+    [Tags]    web    smoke
+    Open Login Page
+    Log In
+    Add Product To Cart    sauce-labs-backpack
+    Element Should Show Text    ${MAIN_CART_BADGE}    1
+```
+
+Why this way and not with Given/When/Then:
+
+- **The test is the specification.** Business readers see exactly what runs - there is no second layer of
+  text that can drift away from the code.
+- **Reuse instead of sentence building.** A keyword like `Log In` lives once in `resources/tasks/` and is used
+  in many tests. If the login changes, one place changes.
+- **Arguments instead of text variants.** Test data is visible as arguments next to the keyword instead of
+  being hidden in sentence fragments; data-driven tests (`[Template]`) follow naturally.
+- **Acting and checking stay separate.** Tasks act, assertions check - that makes clear why a test fails.
+
+Given/When/Then is a good tool to clarify requirements in conversation. The code of this project uses no
+`Given`/`When`/`Then` prefixes; the business keyword names carry the meaning themselves.
+
+## Steps
+
+1. **Understand without asking much.** Derive steps, data and expected result from the description, the
+   existing tests and the page objects. Ask **only** if the expected result or the object under test (which
+   page, which interface) is unclear - then at most one question. Everything else (test data, environment
+   `dev`, tags) you assume sensibly and state the assumptions.
+2. **Draft it as a keyword sequence** - a test name that describes the expected behaviour, then the steps as
+   business keywords with arguments. Show the draft together with the code, not as a separate question, and
+   name new keywords you add.
+3. **Use existing building blocks** (table below, examples in `tests/`). Only add what is missing - bottom
+   up: page → interaction → task or assertion → test.
+4. **Write the code** following the rules below.
+5. **Check:** `uv run robocop format`, `uv run robocop check`, `uv run robotcode -p check robot`, then
+   `uv run robotcode robot -t "Name Of The Test"`. If you can run commands yourself, do so and fix findings;
+   otherwise name the commands.
+6. **Hand over:** in a chat, give every new or changed file as a complete block with its path, and say where
+   a new keyword goes if only a part of a file changes.
+
+## Rules
+
+- Test, task and assertion names describe business behaviour, e.g. test `Product Lands In The Cart`, task
+  `Add Product To Cart`, assertion `Element Should Show Text`.
+- Interactions (technical helpers) go to `resources/interactions/`; the file has `Keyword Tags    interaction`.
+  Tests never call keywords tagged `interaction`.
+- Avoid names of library keywords for tasks and assertions (e.g. not `Close Browser`): the own keyword would
+  hide the library keyword.
+- Every keyword gets a `[Documentation]` that business readers understand.
+- Robot Framework 7: assignment without `=` (`${value}    Keyword`), `VAR` instead of `Set Variable`,
+  `RETURN` instead of `[Return]`. No `Evaluate`.
+- No `Sleep` - waiting happens with wait or check keywords of the library.
+- Tags: area (e.g. `web`) and `smoke` for quick core tests.
+- Every test is independent and brings its own test data. Setup and teardown are tasks and go to
+  `Test Setup` / `Test Teardown`.
+- Imports always with `${EXECDIR}/resources/...`.
+{%- if include_web or include_accessibility %}
+- Selectors belong to `resources/pages/<page>_page.resource` (names `PAGE_ELEMENT`), preferably
+  `id=…` or `css=[data-test="…"]`, no XPath.
+{%- endif %}
+- Passwords only as `crypt:…` from `resources/main.resource`, never in plain text.
+
+## Existing building blocks
+
+The assertions are **generic** (e.g. "Element Should Show Text") and get selectors from the page objects or
+values from the tasks.
+
+| Area | Tasks (actions) | Assertions (checks) |
+|------|-----------------|---------------------|
+| Basics | `Read Credentials Of Environment` | `Value Should Be Filled`, `Value Should Equal`, `Text Should Include`, `Credentials Should Be Complete` |
+{%- if include_web %}
+| Web | `Start Browser`, `Stop Browser`, `Open Login Page`, `Log In`, `Add Product To Cart`, `Open Cart`, `Log Out` | `Element Should Be Shown`, `Element Should Show Text`, `Element Text Should Include`, `Number Of Elements Should Be`, `Address Should Include` |
+{%- endif %}
+{%- if include_api %}
+| API | `Fetch Todo`, `Fetch Todos Of User`, `Create Post` | `Status Code Should Be`, `Response Field Should Be`, `Response Should Have At Least Entries` |
+{%- endif %}
+{%- if include_database %}
+| Database | `Start Example Database`, `Create Customer`, `Change City`, `Delete Customer`, `Close Database` | `Query Should Return`, `Table Should Have Rows` |
+{%- endif %}
+{%- if include_desktop %}
+| Desktop | `Start Calculator`, `Calculate`, `Close Calculator` | `Program Element Should Show Text` |
+{%- endif %}
+{%- if include_mobile %}
+| Mobile | `Start Settings App`, `Open Setting`, `Stop App` | `Screen Should Show Text` |
+{%- endif %}
+{%- if include_faker %}
+| Test data | `Generate Random Customer`, `Generate Random Customers`, `Collect Email Addresses` | `All Fields Should Be Filled`, `Email Address Should Be Valid`, `Values Should Be Unique` |
+{%- endif %}
+{%- if include_email %}
+| E-mail | `Connect To Mailbox`, `Wait For Email From`, `Disconnect From Mailbox` | `Email Should Include Text`, `Email Should Include Link` |
+{%- endif %}
+{%- if include_doctest %}
+| PDF and images | `Get Document` | `Image Should Match Reference`, `PDF Should Match Reference`, `PDF Should Include Texts` |
+{%- endif %}
+{%- if include_sap %}
+| SAP | `Attach To SAP`, `Open Transaction`, `Detach From SAP` | `Window Title Should Include` |
+{%- endif %}
+{%- if include_accessibility %}
+| Accessibility | `Start Audit Browser`, `Audit Accessibility Of Page`, `Audit Accessibility Of Current Page`, `Log In For Audit`, `Open Cart For Audit`, `Stop Audit Browser` | `Page Should Have No Serious Violations` |
+{%- endif %}
+{%- if include_web or include_accessibility %}
+
+Page objects (selectors) for the demo shop: `login_page`, `main_page`, `cart_page`, `settings_page` in
+`resources/pages/`.
+{%- endif %}
+
+The table shows the state when the project was created. New keywords are found directly in
+`resources/tasks/` and `resources/assertions/`.

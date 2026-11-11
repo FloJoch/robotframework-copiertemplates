@@ -1,0 +1,27 @@
+*** Settings ***
+Documentation       Ability "work in the browser" with the Browser Library (Playwright). Used by
+{%- if include_web and web_library == 'browser' and include_accessibility %}
+...                 the web tests and the accessibility checks together - imported only once.
+{%- elif include_accessibility %}
+...                 the accessibility checks.
+{%- else %}
+...                 the web tests.
+{%- endif %}
+...                 No keywords - they live in interactions/browser_interactions.resource.
+Resource            ${EXECDIR}/resources/main.resource
+Library             Browser
+...                 timeout=${TIMEOUT}
+...                 auto_closing_level=SUITE
+{%- if include_accessibility %}
+...                 jsextension=${EXECDIR}/resources/axe_extension.js
+{%- endif %}
+
+
+*** Variables ***
+# Start address of the web application in the active environment (values in main.resource, URLS)
+${WEB_BASE_URL}     ${URLS}[${ENV}][web]
+{%- if include_accessibility %}
+# Accessibility: violations with these impacts make a test fail
+# (minor, moderate, serious, critical)
+@{A11Y_BLOCKING_IMPACTS}    serious    critical
+{%- endif %}

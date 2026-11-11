@@ -1,0 +1,10 @@
+*** Settings ***
+Documentation       Ability "generate test data": imports the FakerLibrary (fake names, addresses ...).
+...                 No keywords - they live in interactions/.
+Resource            ${EXECDIR}/resources/main.resource
+Library             FakerLibrary    locale=${FAKER_LOCALE}
+
+
+*** Variables ***
+# Language and country of the test data, e.g. en_US, en_GB, de_DE
+${FAKER_LOCALE}     en_US

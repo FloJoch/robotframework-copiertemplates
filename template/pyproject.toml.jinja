@@ -1,0 +1,61 @@
+# Robot Framework is pinned to {{ rf_version }}. uv resolves matching versions of the libraries;
+# uv.lock freezes them. Newer versions: "uv lock --upgrade", then run the tests.
+[project]
+name = "{{ project_slug }}"
+version = "0.1.0"
+description = "Automated tests with Robot Framework for {{ project_name }}."
+# Python version of the template branch ({{ python_version }}, also in .python-version){{ '; PlatynUI supports Python < 3.14' if include_desktop else '' }}.
+requires-python = ">={{ python_version }}{{ ',<3.14' if include_desktop else '' }}"
+dependencies = [
+    "robotframework=={{ rf_version }}",
+    "robotframework-crypto",
+{%- if (include_web and web_library == 'browser') or include_accessibility %}
+    "robotframework-browser",
+{%- endif %}
+{%- if include_web and web_library == 'selenium' %}
+    "robotframework-seleniumlibrary",
+{%- endif %}
+{%- if include_api and api_library == 'requests' %}
+    "robotframework-requests",
+{%- elif include_api %}
+    "RESTinstance",
+{%- endif %}
+{%- if include_database %}
+    "robotframework-databaselibrary",
+{%- if database_driver == 'postgresql' %}
+    "psycopg2-binary",
+{%- elif database_driver == 'mysql' %}
+    "pymysql",
+{%- endif %}
+{%- endif %}
+{%- if include_desktop %}
+    "robotframework-platynui",
+{%- endif %}
+{%- if include_mobile %}
+    "robotframework-appiumlibrary",
+{%- endif %}
+{%- if include_faker %}
+    "robotframework-faker",
+{%- endif %}
+{%- if include_email %}
+    "robotframework-imaplibrary2",
+{%- endif %}
+{%- if include_doctest %}
+    "robotframework-doctestlibrary",
+{%- endif %}
+{%- if include_sap %}
+    "robotframework-robosapiens",
+{%- endif %}
+]
+
+[dependency-groups]
+dev = [
+    "robotcode[runner]",
+    "robotframework-robocop",
+]
+
+[tool.uv]
+package = false
+
+[tool.robocop]
+# Restrict rules if needed, e.g. select = ["..."] or ignore = ["..."].

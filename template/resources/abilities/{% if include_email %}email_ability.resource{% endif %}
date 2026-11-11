@@ -1,0 +1,15 @@
+*** Settings ***
+Documentation       Ability "read e-mails": imports the ImapLibrary2 and provides the mailbox.
+...                 No keywords - they live in interactions/.
+Resource            ${EXECDIR}/resources/main.resource
+Library             ImapLibrary2
+
+
+*** Variables ***
+# Mailbox (IMAP) - enter your values here. User and password come from main.resource (LOGINS).
+${EMAIL_HOST}           imap.example.com
+${EMAIL_PORT}           993
+${EMAIL_USER}           ${LOGINS}[${ENV}][username]
+${EMAIL_PASSWORD}       ${LOGINS}[${ENV}][password]
+# Maximum time (seconds) to wait for an e-mail
+${EMAIL_WAIT_SECONDS}   60

@@ -1,0 +1,23 @@
+*** Settings ***
+Documentation       Generic checks of test data - these keywords are used in tests.
+Resource            ${EXECDIR}/resources/interactions/faker_interactions.resource
+
+
+*** Keywords ***
+All Fields Should Be Filled
+    [Documentation]    Checks that every field of a record (dictionary) has a value.
+    [Arguments]    ${record}
+    FOR    ${field}    ${value}    IN    &{record}
+        ${text}    Convert To String    ${value}
+        Should Not Be Empty    ${text}    Field "${field}" is empty
+    END
+
+Email Address Should Be Valid
+    [Documentation]    Checks that a value is built like an e-mail address.
+    [Arguments]    ${email}
+    Should Match Regexp    ${email}    ^\\S+@\\S+\\.\\S+$
+
+Values Should Be Unique
+    [Documentation]    Checks that no value occurs twice in the list.
+    [Arguments]    ${values}
+    List Should Not Contain Duplicates    ${values}

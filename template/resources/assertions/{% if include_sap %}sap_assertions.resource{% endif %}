@@ -1,0 +1,11 @@
+*** Settings ***
+Documentation       Generic checks in SAP - these keywords are used in tests.
+Resource            ${EXECDIR}/resources/interactions/sap_interactions.resource
+
+
+*** Keywords ***
+Window Title Should Include
+    [Documentation]    Checks that the title of the active SAP window includes the expected text.
+    [Arguments]    ${expected}
+    ${title}    Read Sap Window Title
+    Should Contain    ${title}    ${expected}

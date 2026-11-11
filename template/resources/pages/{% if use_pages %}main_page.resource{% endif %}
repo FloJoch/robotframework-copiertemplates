@@ -1,0 +1,11 @@
+*** Settings ***
+Documentation       Page object "main page" (product overview after login). {product} is replaced,
+...                 e.g. by sauce-labs-backpack.
+
+
+*** Variables ***
+${MAIN_TITLE}                   css=[data-test="title"]
+${MAIN_PRODUCTS}                css=[data-test="inventory-item"]
+${MAIN_ADD_TO_CART_BUTTON}      css=[data-test="add-to-cart-{product}"]
+${MAIN_CART_BADGE}              css=[data-test="shopping-cart-badge"]
+${MAIN_CART_LINK}               css=[data-test="shopping-cart-link"]

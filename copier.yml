@@ -36,7 +36,7 @@ project_slug:
 # Older versions live on branches named rf-<version> - see docs/versions-and-updates.md.
 rf_version:
   type: str
-  default: "7.5.1"
+  default: "7.4.2"
   when: false
 
 # Python version of this branch - chosen to match rf_version and the libraries (not always the newest Python:
@@ -224,7 +224,7 @@ _tasks:
 _message_before_copy: |
   {%- set b = '\x1b[1m' %}{% set c = '\x1b[36m' %}{% set g = '\x1b[32m' %}{% set d = '\x1b[2m' %}{% set r = '\x1b[0m' %}
   {#- Same version as rf_version above - a test checks that both match. #}
-  {%- set version = "7.5.1" %}
+  {%- set version = "7.4.2" %}
 
   {{ b }}{{ c }}Robot Framework {{ version }} - neues Projekt / new project{{ r }}
   {{ b }}Ziel / target:{{ r }} {{ g }}{{ _folder_name }}{{ r }}{% if _copier_conf.dst_path | string == '.' %} (aktueller Ordner / current folder){% else %} ({{ _copier_conf.dst_path }}){% endif %}
